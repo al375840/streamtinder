@@ -29,10 +29,14 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddSignalR(hubOpts =>
 {
-    hubOpts.EnableDetailedErrors = true; // TODO: disable after diagnosing the PublishState failure
+    hubOpts.EnableDetailedErrors = true; // TODO: disable after confirming enum fix works
 }).AddJsonProtocol(opts =>
 {
     opts.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    // Enums as camelCase strings: "lobby", "card", "left", "right" — matches Angular DTOs
+    opts.PayloadSerializerOptions.Converters.Add(
+        new System.Text.Json.Serialization.JsonStringEnumConverter(
+            System.Text.Json.JsonNamingPolicy.CamelCase));
 });
 builder.Services.AddSingleton<IGameStatePublisher, SignalRGamePublisher>();
 builder.Services.AddSingleton<GameOrchestrator>();
