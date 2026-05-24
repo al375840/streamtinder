@@ -1,5 +1,8 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using StreamerTinder.Api.Infrastructure;
 
 namespace StreamerTinder.Api.Tests;
 
@@ -13,6 +16,14 @@ public class BasicAuthMiddlewareTests : IClassFixture<WebApplicationFactory<Prog
         {
             builder.UseSetting("StreamerPanel:User", "streamer");
             builder.UseSetting("StreamerPanel:Pass", "testpass");
+
+            builder.ConfigureServices(services =>
+            {
+                // Reemplazar el DbContext real con InMemory para tests
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                if (descriptor != null) services.Remove(descriptor);
+                services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("TestDb"));
+            });
         });
     }
 
