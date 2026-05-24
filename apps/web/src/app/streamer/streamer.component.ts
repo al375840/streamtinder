@@ -1,8 +1,109 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { UpperCasePipe } from '@angular/common';
+import { SignalRService } from '../core/signalr.service';
+import { GameStateStore, GameStateDto, GameWinnerDto, PackDto } from '../core/game-state.store';
+import { ControlsIdleComponent } from './controls/controls-idle.component';
+import { ControlsLobbyComponent } from './controls/controls-lobby.component';
+import { ControlsCardComponent } from './controls/controls-card.component';
+import { ControlsCardRevealComponent } from './controls/controls-card-reveal.component';
+import { ControlsCribaComponent } from './controls/controls-criba.component';
+import { ControlsVictoryComponent } from './controls/controls-victory.component';
 
 @Component({
   selector: 'app-streamer',
   standalone: true,
-  template: `<div style="padding: 64px; font-family: var(--font-title); color: var(--c-bone);">PANEL STREAMER (pendiente)</div>`
+  imports: [
+    UpperCasePipe,
+    ControlsIdleComponent, ControlsLobbyComponent, ControlsCardComponent,
+    ControlsCardRevealComponent, ControlsCribaComponent, ControlsVictoryComponent
+  ],
+  template: `
+    <div class="streamer-root">
+      <header class="s-header">
+        <div class="s-title">
+          <span class="heart"></span>
+          STREAMER PANEL
+        </div>
+        <div class="s-phase-badge">
+          FASE: <span class="phase-name">{{ store.phase() | uppercase }}</span>
+        </div>
+        <div class="s-card-info">
+          @if (store.state()?.pack) {
+            {{ store.state()!.pack!.name }} ·
+            CARTA {{ store.state()!.cardIndex + 1 }}/{{ store.state()!.pack!.cards.length }}
+          }
+        </div>
+      </header>
+
+      <main class="s-main">
+        @switch (store.phase()) {
+          @case ('idle')            { <controls-idle [packs]="packs()" /> }
+          @case ('lobby')           { <controls-lobby /> }
+          @case ('card')            { <controls-card /> }
+          @case ('cardReveal')      { <controls-card-reveal /> }
+          @case ('tallyTransition') { <controls-criba /> }
+          @case ('criba')           { <controls-criba /> }
+          @case ('victory')         { <controls-victory [packs]="packs()" /> }
+          @default                  { <controls-idle [packs]="packs()" /> }
+        }
+      </main>
+    </div>
+  `,
+  styles: [`
+    .streamer-root {
+      min-height: 100vh;
+      background: var(--c-void);
+      display: flex; flex-direction: column;
+      font-family: var(--font-title);
+    }
+    .s-header {
+      background: var(--c-night);
+      border-bottom: 4px solid var(--c-flame);
+      padding: var(--u2) var(--u3);
+      display: grid; grid-template-columns: auto 1fr auto;
+      align-items: center; gap: var(--u3);
+    }
+    .s-title {
+      display: flex; align-items: center; gap: var(--u);
+      font-size: var(--fs-md); color: var(--c-flame);
+    }
+    .heart {
+      display: inline-block; width: 18px; height: 18px;
+      background: var(--c-flame);
+      clip-path: polygon(
+        0 25%, 25% 25%, 25% 0, 41% 0, 41% 25%, 58% 25%, 58% 0, 75% 0, 75% 25%, 100% 25%,
+        100% 75%, 75% 75%, 75% 100%, 58% 100%, 58% 75%, 41% 75%, 41% 100%, 25% 100%, 25% 75%, 0 75%
+      );
+    }
+    .s-phase-badge {
+      text-align: center;
+      font-size: var(--fs-sm); color: var(--c-ash);
+    }
+    .phase-name { color: var(--c-gold); }
+    .s-card-info {
+      text-align: right;
+      font-size: var(--fs-xs); color: var(--c-bone);
+    }
+    .s-main {
+      flex: 1; padding: var(--u4); max-width: 960px; margin: 0 auto; width: 100%;
+    }
+  `]
 })
-export class StreamerComponent {}
+export class StreamerComponent implements OnInit {
+  protected store = inject(GameStateStore);
+  protected sr = inject(SignalRService);
+  protected packs = signal<PackDto[]>([]);
+
+  async ngOnInit(): Promise<void> {
+    await this.sr.connect(
+      (s) => this.store.state.set(s as GameStateDto | null),
+      (w) => this.store.winners.set(w as GameWinnerDto[])
+    );
+    try {
+      const packs = await this.sr.invoke<PackDto[]>('ListPacks');
+      this.packs.set(packs ?? []);
+    } catch (e) {
+      console.warn('Could not load packs:', e);
+    }
+  }
+}
