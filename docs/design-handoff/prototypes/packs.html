@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Packs de paleta</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; min-height: 100vh; }
+
+  .nav {
+    background: var(--c-night); padding: var(--u2) var(--u3);
+    display: flex; gap: var(--u2); align-items: center;
+    border-bottom: var(--border-1) solid var(--c-stone);
+    flex-wrap: wrap;
+  }
+  .nav h1 { font-size: var(--fs-md); color: var(--c-flame); margin-right: auto; }
+  .nav a {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    border: 2px solid var(--c-stone); color: var(--c-ash);
+  }
+  .nav a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: var(--u4) var(--u3) var(--u8); }
+
+  .hero h1 {
+    font-size: 56px; color: var(--c-flame);
+    text-shadow: 5px 5px 0 var(--c-void); margin-bottom: var(--u);
+  }
+  .hero p { font-size: 28px; color: var(--c-bone); margin-bottom: var(--u4); max-width: 68ch; }
+  .hero strong { color: var(--c-flame); }
+
+  /* === Pack card === */
+  .pack {
+    margin-bottom: var(--u6);
+    padding: var(--u3);
+    border: var(--border-3) solid var(--pack-paper, var(--c-paper));
+    box-shadow: var(--shadow-pixel-lg);
+    background: var(--pack-bg, var(--c-night));
+  }
+  .pack-head {
+    display: grid; grid-template-columns: 1fr auto; gap: var(--u3);
+    align-items: end; margin-bottom: var(--u3);
+    border-bottom: 4px solid var(--pack-accent, var(--c-flame));
+    padding-bottom: var(--u2);
+  }
+  .pack-name {
+    font-family: var(--font-title); font-size: 36px;
+    color: var(--pack-accent, var(--c-flame));
+    text-shadow: 4px 4px 0 var(--c-void);
+    letter-spacing: 2px;
+  }
+  .pack-meta {
+    font-family: var(--font-body); font-size: 22px;
+    color: var(--pack-bone, var(--c-bone));
+  }
+  .pack-meta .tag {
+    display: inline-block;
+    font-family: var(--font-title); font-size: 10px;
+    padding: 4px 8px;
+    background: var(--pack-accent, var(--c-flame));
+    color: var(--c-void);
+    margin-right: var(--u);
+  }
+
+  .pack-body {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--u3);
+    margin-bottom: var(--u3);
+  }
+  .pack-section h3 {
+    font-family: var(--font-title); font-size: 10px;
+    color: var(--pack-bone, var(--c-ash));
+    margin-bottom: var(--u); letter-spacing: 1px;
+  }
+
+  /* Palette mini swatches */
+  .pal-row {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+    margin-bottom: var(--u2);
+  }
+  .pal-row .sw {
+    aspect-ratio: 1; border: 2px solid var(--c-void);
+    position: relative;
+  }
+  .pal-row .sw::after {
+    content: attr(data-hex);
+    position: absolute; top: 100%; left: 50%; transform: translate(-50%, 4px);
+    font-family: var(--font-title); font-size: 6px;
+    color: var(--pack-bone, var(--c-bone));
+    white-space: nowrap;
+  }
+  .pal-row + .pal-row { margin-top: var(--u3); }
+
+  /* === Avatar row === */
+  .avatar-row {
+    display: flex; gap: var(--u2); justify-content: center;
+    background: var(--pack-canvas, var(--c-void));
+    padding: var(--u3);
+    border: 2px dashed var(--pack-accent, var(--c-flame));
+  }
+  .avatar-row canvas { width: 72px; height: 90px; }
+
+  /* === Mini overlay preview === */
+  .mini-overlay {
+    background: var(--pack-bg, var(--c-night));
+    border: 4px solid var(--pack-paper, var(--c-paper));
+    aspect-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-overlay .topbar {
+    background: var(--pack-dusk, var(--c-dusk));
+    border-bottom: 3px solid var(--pack-accent, var(--c-flame));
+    padding: 4px 12px;
+    display: flex; justify-content: space-between;
+    font-family: var(--font-title); font-size: 10px;
+    color: var(--pack-paper, var(--c-paper));
+  }
+  .mini-overlay .content {
+    position: absolute; top: 28px; left: 0; right: 0; bottom: 24px;
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--u2);
+    align-items: center; padding: var(--u2);
+  }
+  .mini-overlay .vc {
+    background: var(--pack-dusk, var(--c-dusk));
+    border: 3px solid var(--pack-paper, var(--c-paper));
+    padding: 4px;
+    display: flex; flex-direction: column;
+    text-align: center;
+    aspect-ratio: 2/3;
+  }
+  .mini-overlay .vc .img {
+    flex: 1; background:
+      repeating-linear-gradient(45deg, var(--pack-bg, var(--c-night)) 0 6px, var(--pack-dusk, var(--c-dusk)) 6px 12px);
+    border: 2px solid var(--pack-stone, var(--c-stone));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--pack-bone, var(--c-ash));
+    font-family: var(--font-title); font-size: 8px;
+  }
+  .mini-overlay .vc .lbl {
+    font-family: var(--font-title); font-size: 10px;
+    color: var(--pack-paper, var(--c-paper));
+    margin-top: 4px;
+  }
+  .mini-overlay .vs {
+    font-family: var(--font-title); font-size: 24px;
+    color: var(--pack-paper, var(--c-paper));
+    text-shadow: 3px 3px 0 var(--pack-accent, var(--c-flame));
+  }
+  .mini-overlay .bottombar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--pack-dusk, var(--c-dusk));
+    border-top: 3px solid var(--pack-accent, var(--c-flame));
+    padding: 4px 12px;
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--pack-bone, var(--c-bone));
+  }
+
+  /* === Description === */
+  .pack-desc {
+    font-family: var(--font-body); font-size: 22px;
+    color: var(--pack-bone, var(--c-bone));
+    background: var(--c-void); padding: var(--u2);
+    border-left: 4px solid var(--pack-accent, var(--c-flame));
+  }
+  .pack-desc strong { color: var(--pack-accent, var(--c-flame)); font-family: var(--font-title); font-size: 12px; }
+
+  /* === Pack themes === */
+  .pack.pizza {
+    --pack-accent: #ff6b1f;
+    --pack-bg: #2a1a0f;
+    --pack-dusk: #3d2818;
+    --pack-paper: #ffd9a3;
+    --pack-bone: #ffa566;
+    --pack-stone: #6a3a1a;
+    --pack-canvas: #1f0f08;
+  }
+  .pack.rpg {
+    --pack-accent: #b85aff;
+    --pack-bg: #0f0a1f;
+    --pack-dusk: #1f1438;
+    --pack-paper: #d9ffa3;
+    --pack-bone: #9d80ff;
+    --pack-stone: #4a2a8a;
+    --pack-canvas: #0a0518;
+  }
+  .pack.asco {
+    --pack-accent: #aef535;
+    --pack-bg: #0f1a08;
+    --pack-dusk: #1f2e10;
+    --pack-paper: #e5ff8e;
+    --pack-bone: #8acf3a;
+    --pack-stone: #3a4f1f;
+    --pack-canvas: #050f00;
+  }
+  .pack.anime {
+    --pack-accent: #ff5fb5;
+    --pack-bg: #1f0f1a;
+    --pack-dusk: #38182d;
+    --pack-paper: #ffd9f0;
+    --pack-bone: #ffadda;
+    --pack-stone: #6a2a52;
+    --pack-canvas: #0f0510;
+  }
+  .pack.boss {
+    --pack-accent: #ff2a2a;
+    --pack-bg: #1a0808;
+    --pack-dusk: #2a0f0f;
+    --pack-paper: #ffb0b0;
+    --pack-bone: #ff7777;
+    --pack-stone: #6a1a1a;
+    --pack-canvas: #0f0303;
+  }
+
+  @media (max-width: 800px) {
+    .pack-body { grid-template-columns: 1fr; }
+    .pack-head { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body data-screen-label="Packs">
+
+<header class="nav">
+  <h1>PACKS DE PALETA</h1>
+  <a href="index.html">← Inicio</a>
+  <a href="design-system.html">Sistema</a>
+  <a href="overlay.html">Overlay</a>
+  <a href="streamer.html">Panel</a>
+  <a href="leaderboard.html">Leaderboard</a>
+</header>
+
+<div class="page">
+  <section class="hero">
+    <h1>5 PACKS</h1>
+    <p>Cada pack tiene <strong>una pregunta</strong> que se enseña en el overlay durante toda la partida y <strong>una sub-paleta de acentos</strong> que reescribe el look del overlay. Las cartas son listas de items con imagen + subtitle opcional. <strong>El sprite engine recibe la sub-paleta del pack activo</strong> y los nicks resuelven a colores nuevos manteniendo el mismo hash determinista — un mismo @nick es siempre rojo en MEMES y verde ácido en COMIDA ASQUEROSA.</p>
+  </section>
+
+  <!-- ====================================================
+       PIZZA TOPPINGS
+       ==================================================== -->
+  <section class="pack pizza">
+    <div class="pack-head">
+      <div>
+        <div class="pack-name">PIZZA TOPPINGS</div>
+        <div class="pack-meta"><span class="tag">CÁLIDOS</span>15 cartas · pregunta: <strong>¿TE LO COMERÍAS?</strong> · controversia ★★★★★</div>
+      </div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-section">
+        <h3>PALETA DEL PACK</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff6b1f" data-hex="#ff6b1f"></div>
+          <div class="sw" style="background:#ff3c1f" data-hex="#ff3c1f"></div>
+          <div class="sw" style="background:#ffae35" data-hex="#ffae35"></div>
+          <div class="sw" style="background:#ffd433" data-hex="#ffd433"></div>
+          <div class="sw" style="background:#c93a1a" data-hex="#c93a1a"></div>
+          <div class="sw" style="background:#7a2e0f" data-hex="#7a2e0f"></div>
+          <div class="sw" style="background:#3d1a08" data-hex="#3d1a08"></div>
+          <div class="sw" style="background:#ffe5b8" data-hex="#ffe5b8"></div>
+        </div>
+        <h3>CUERPOS DE AVATAR</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff6b1f" data-hex="rojo"></div>
+          <div class="sw" style="background:#ff3c1f" data-hex="tomate"></div>
+          <div class="sw" style="background:#ffae35" data-hex="naranja"></div>
+          <div class="sw" style="background:#ffd433" data-hex="queso"></div>
+          <div class="sw" style="background:#c93a1a" data-hex="pepperoni"></div>
+          <div class="sw" style="background:#7a2e0f" data-hex="masa"></div>
+          <div class="sw" style="background:#e5b87a" data-hex="anchoa"></div>
+          <div class="sw" style="background:#ffffff" data-hex="mozza"></div>
+        </div>
+      </div>
+      <div class="pack-section">
+        <h3>OVERLAY CON ESTE PACK</h3>
+        <div class="mini-overlay">
+          <div class="topbar">
+            <span>🍕 PIZZA TOPPINGS</span>
+            <span>CARTA 3 / 10</span>
+          </div>
+          <div class="content" style="grid-template-columns:1fr">
+            <div class="vc" style="aspect-ratio:3/4;max-width:48%;margin:0 auto"><div class="img">[ANCHOA]</div><div class="lbl">!izq / !der</div></div>
+          </div>
+          <div class="bottombar">¿TE LO COMERÍAS?</div>
+        </div>
+      </div>
+    </div>
+    <h3 style="font-family:var(--font-title);font-size:10px;color:var(--pack-bone);margin-bottom:var(--u)">AVATARES CON ESTE PACK</h3>
+    <div class="avatar-row" data-pack="pizza"></div>
+    <p class="pack-desc" style="margin-top:var(--u3)">
+      <strong>TONO ·</strong> Cálido, exagerado, casi anuncio nocturno de pizzería. Cartas: anchoa, piña, pepperoni, brócoli, atún, kebab, chocolate.
+    </p>
+  </section>
+
+  <!-- RPGS -->
+  <section class="pack rpg">
+    <div class="pack-head">
+      <div>
+        <div class="pack-name">RPGs CLÁSICOS</div>
+        <div class="pack-meta"><span class="tag">PÚRPURA / VERDE</span>24 cartas · pregunta: <strong>¿LO HAS JUGADO ENTERO?</strong> · controversia ★★★</div>
+      </div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-section">
+        <h3>PALETA</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#b85aff" data-hex="#b85aff"></div>
+          <div class="sw" style="background:#7a2eff" data-hex="#7a2eff"></div>
+          <div class="sw" style="background:#5ee388" data-hex="#5ee388"></div>
+          <div class="sw" style="background:#2a8a5a" data-hex="#2a8a5a"></div>
+          <div class="sw" style="background:#ffd433" data-hex="#ffd433"></div>
+          <div class="sw" style="background:#4a2a8a" data-hex="#4a2a8a"></div>
+          <div class="sw" style="background:#1f1438" data-hex="#1f1438"></div>
+          <div class="sw" style="background:#d9ffa3" data-hex="#d9ffa3"></div>
+        </div>
+        <h3>CUERPOS</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#b85aff" data-hex="mago"></div>
+          <div class="sw" style="background:#5ee388" data-hex="elfo"></div>
+          <div class="sw" style="background:#ff5b5b" data-hex="guerrero"></div>
+          <div class="sw" style="background:#ffd433" data-hex="bardo"></div>
+          <div class="sw" style="background:#6a8aff" data-hex="paladin"></div>
+          <div class="sw" style="background:#7a2eff" data-hex="hechicero"></div>
+          <div class="sw" style="background:#2a8a5a" data-hex="druida"></div>
+          <div class="sw" style="background:#cc6633" data-hex="enano"></div>
+        </div>
+      </div>
+      <div class="pack-section">
+        <h3>OVERLAY</h3>
+        <div class="mini-overlay">
+          <div class="topbar"><span>⚔ RPGs CLÁSICOS</span><span>CARTA 5 / 10</span></div>
+          <div class="content" style="grid-template-columns:1fr">
+            <div class="vc" style="aspect-ratio:3/4;max-width:48%;margin:0 auto"><div class="img">[CHRONO]</div><div class="lbl">!izq / !der</div></div>
+          </div>
+          <div class="bottombar">¿LO HAS JUGADO ENTERO?</div>
+        </div>
+      </div>
+    </div>
+    <div class="avatar-row" data-pack="rpg"></div>
+    <p class="pack-desc" style="margin-top:var(--u3)"><strong>TONO ·</strong> Aventura clásica. Cartas: Chrono Trigger, FF7, EarthBound, Secret of Mana, Suikoden 2, Dragon Quest 8, Persona 3, Tales of Vesperia, Mother 3...</p>
+  </section>
+
+  <!-- ASQUEROSA -->
+  <section class="pack asco">
+    <div class="pack-head">
+      <div>
+        <div class="pack-name">COMIDA ASQUEROSA</div>
+        <div class="pack-meta"><span class="tag">VERDES ÁCIDOS</span>12 cartas · pregunta: <strong>¿LO PROBARÍAS?</strong> · controversia ★★★★★</div>
+      </div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-section">
+        <h3>PALETA</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#aef535" data-hex="#aef535"></div>
+          <div class="sw" style="background:#6ad117" data-hex="#6ad117"></div>
+          <div class="sw" style="background:#3a8517" data-hex="#3a8517"></div>
+          <div class="sw" style="background:#ffd433" data-hex="#ffd433"></div>
+          <div class="sw" style="background:#8aff5e" data-hex="#8aff5e"></div>
+          <div class="sw" style="background:#1f3a08" data-hex="#1f3a08"></div>
+          <div class="sw" style="background:#0a1f00" data-hex="#0a1f00"></div>
+          <div class="sw" style="background:#e5ff8e" data-hex="#e5ff8e"></div>
+        </div>
+        <h3>CUERPOS</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#aef535" data-hex="moho"></div>
+          <div class="sw" style="background:#6ad117" data-hex="alga"></div>
+          <div class="sw" style="background:#3a8517" data-hex="pasto"></div>
+          <div class="sw" style="background:#ffd433" data-hex="huevo"></div>
+          <div class="sw" style="background:#8aff5e" data-hex="ácido"></div>
+          <div class="sw" style="background:#cc8a3a" data-hex="vómito"></div>
+          <div class="sw" style="background:#ff5b9a" data-hex="lengua"></div>
+          <div class="sw" style="background:#5a3a1f" data-hex="podrido"></div>
+        </div>
+      </div>
+      <div class="pack-section">
+        <h3>OVERLAY</h3>
+        <div class="mini-overlay">
+          <div class="topbar"><span>🤮 COMIDA ASQUEROSA</span><span>CARTA 4 / 10</span></div>
+          <div class="content" style="grid-template-columns:1fr">
+            <div class="vc" style="aspect-ratio:3/4;max-width:48%;margin:0 auto"><div class="img">[HAGGIS]</div><div class="lbl">!izq / !der</div></div>
+          </div>
+          <div class="bottombar">¿LO PROBARÍAS?</div>
+        </div>
+      </div>
+    </div>
+    <div class="avatar-row" data-pack="asco"></div>
+    <p class="pack-desc" style="margin-top:var(--u3)"><strong>TONO ·</strong> Repulsión deliberada. Cartas: haggis, surströmming, hákarl, balut, casu marzu, natto, kiviak, marmite.</p>
+  </section>
+
+  <!-- ANIME -->
+  <section class="pack anime">
+    <div class="pack-head">
+      <div>
+        <div class="pack-name">FAMOSOS ESPAÑOLES</div>
+        <div class="pack-meta"><span class="tag">PASTEL · ROSAS</span>30 cartas · pregunta: <strong>¿TE SUENA?</strong> · controversia ★★★</div>
+      </div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-section">
+        <h3>PALETA</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff5fb5" data-hex="#ff5fb5"></div>
+          <div class="sw" style="background:#9d6aff" data-hex="#9d6aff"></div>
+          <div class="sw" style="background:#5fcfff" data-hex="#5fcfff"></div>
+          <div class="sw" style="background:#ffae5e" data-hex="#ffae5e"></div>
+          <div class="sw" style="background:#ffd9f0" data-hex="#ffd9f0"></div>
+          <div class="sw" style="background:#6a2a52" data-hex="#6a2a52"></div>
+          <div class="sw" style="background:#1f0f1a" data-hex="#1f0f1a"></div>
+          <div class="sw" style="background:#fff5fa" data-hex="#fff5fa"></div>
+        </div>
+        <h3>CUERPOS</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff5fb5" data-hex="rosa"></div>
+          <div class="sw" style="background:#9d6aff" data-hex="lila"></div>
+          <div class="sw" style="background:#5fcfff" data-hex="cyan"></div>
+          <div class="sw" style="background:#ffae5e" data-hex="naranja"></div>
+          <div class="sw" style="background:#ff8aff" data-hex="magenta"></div>
+          <div class="sw" style="background:#5fff9d" data-hex="mint"></div>
+          <div class="sw" style="background:#ffeeaa" data-hex="cream"></div>
+          <div class="sw" style="background:#ffffff" data-hex="blanco"></div>
+        </div>
+      </div>
+      <div class="pack-section">
+        <h3>OVERLAY</h3>
+        <div class="mini-overlay">
+          <div class="topbar"><span>★ FAMOSOS ESPAÑOLES</span><span>CARTA 7 / 10</span></div>
+          <div class="content" style="grid-template-columns:1fr">
+            <div class="vc" style="aspect-ratio:3/4;max-width:48%;margin:0 auto"><div class="img">[ROSALIA]</div><div class="lbl">!izq / !der</div></div>
+          </div>
+          <div class="bottombar">¿TE SUENA?</div>
+        </div>
+      </div>
+    </div>
+    <div class="avatar-row" data-pack="anime"></div>
+    <p class="pack-desc" style="margin-top:var(--u3)"><strong>TONO ·</strong> Mitad referentes universales, mitad influencers oscuros. Cartas: Rosalía, El Cordobés, Belén Esteban, Ortega Cano, Yatra, IbaiLlanos, El Xokas, Carmen Lomana, La Veneno...</p>
+  </section>
+
+  <!-- BOSS BATTLE -->
+  <section class="pack boss">
+    <div class="pack-head">
+      <div>
+        <div class="pack-name">MEMES 2010-2020</div>
+        <div class="pack-meta"><span class="tag">ROJO · ALERTA</span>40 cartas · pregunta: <strong>¿LO RECONOCES?</strong> · controversia ★★</div>
+      </div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-section">
+        <h3>PALETA</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff2a2a" data-hex="#ff2a2a"></div>
+          <div class="sw" style="background:#c91515" data-hex="#c91515"></div>
+          <div class="sw" style="background:#ffae35" data-hex="#ffae35"></div>
+          <div class="sw" style="background:#ffffff" data-hex="#ffffff"></div>
+          <div class="sw" style="background:#7a0a0a" data-hex="#7a0a0a"></div>
+          <div class="sw" style="background:#3a0a0a" data-hex="#3a0a0a"></div>
+          <div class="sw" style="background:#0a0000" data-hex="#0a0000"></div>
+          <div class="sw" style="background:#ffb0b0" data-hex="#ffb0b0"></div>
+        </div>
+        <h3>CUERPOS</h3>
+        <div class="pal-row">
+          <div class="sw" style="background:#ff2a2a" data-hex="rojo"></div>
+          <div class="sw" style="background:#ffffff" data-hex="blanco"></div>
+          <div class="sw" style="background:#c91515" data-hex="v.rojo"></div>
+          <div class="sw" style="background:#ffae35" data-hex="naranja"></div>
+          <div class="sw" style="background:#3a3a3a" data-hex="gris"></div>
+          <div class="sw" style="background:#7a0a0a" data-hex="oscuro"></div>
+          <div class="sw" style="background:#6a6a6a" data-hex="ceniza"></div>
+          <div class="sw" style="background:#cc44cc" data-hex="violeta"></div>
+        </div>
+      </div>
+      <div class="pack-section">
+        <h3>OVERLAY</h3>
+        <div class="mini-overlay">
+          <div class="topbar"><span>🔥 MEMES 2010-2020</span><span>CARTA 4 / 10</span></div>
+          <div class="content" style="grid-template-columns:1fr">
+            <div class="vc" style="aspect-ratio:3/4;max-width:48%;margin:0 auto"><div class="img">[DOGE]</div><div class="lbl">!izq / !der</div></div>
+          </div>
+          <div class="bottombar">¿LO RECONOCES?</div>
+        </div>
+      </div>
+    </div>
+    <div class="avatar-row" data-pack="boss"></div>
+    <p class="pack-desc" style="margin-top:var(--u3)"><strong>TONO ·</strong> Generación meme. Cartas: Doge, Stonks, Trollface, Distracted Boyfriend, Pepe, Wojak, Drake "hotline bling", Spongebob mocking, NPC, Crying Jordan...</p>
+  </section>
+
+</div>
+
+<script src="assets/sprite.js"></script>
+<script>
+  const PACK_PALETTES = {
+    pizza: ['#ff6b1f','#ff3c1f','#ffae35','#ffd433','#c93a1a','#7a2e0f','#e5b87a','#ffffff'],
+    rpg:   ['#b85aff','#5ee388','#ff5b5b','#ffd433','#6a8aff','#7a2eff','#2a8a5a','#cc6633'],
+    asco:  ['#aef535','#6ad117','#3a8517','#ffd433','#8aff5e','#cc8a3a','#ff5b9a','#5a3a1f'],
+    anime: ['#ff5fb5','#9d6aff','#5fcfff','#ffae5e','#ff8aff','#5fff9d','#ffeeaa','#ffffff'],
+    boss:  ['#ff2a2a','#ffffff','#c91515','#ffae35','#3a3a3a','#7a0a0a','#6a6a6a','#cc44cc'],
+  };
+
+  const sampleNicks = ['dragon_baz','pixel_art','crt_kid','ramen_god','glitch_fae','bitwarrior','snek_42','meta_master'];
+
+  document.querySelectorAll('.avatar-row').forEach(row => {
+    const palette = PACK_PALETTES[row.dataset.pack];
+    sampleNicks.forEach(nick => {
+      const c = document.createElement('canvas');
+      SpriteEngine.renderToCanvas(c, nick, { packPalette: palette });
+      row.appendChild(c);
+    });
+  });
+</script>
+
+</body>
+</html>

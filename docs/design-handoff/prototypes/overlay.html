@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Overlay público</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body {
+    background: #000; padding: 0; overflow-x: hidden;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+
+  /* === TOP CHROME (off-overlay) === */
+  .topbar {
+    background: var(--c-night); padding: var(--u2) var(--u3);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: var(--border-1) solid var(--c-stone);
+    flex-wrap: wrap; gap: var(--u2);
+  }
+  .topbar h1 { font-size: var(--fs-md); color: var(--c-flame); }
+  .phase-pills { display: flex; gap: var(--u-half); flex-wrap: wrap; }
+  .phase-pill {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    border: 2px solid var(--c-stone);
+    background: var(--c-dusk); color: var(--c-ash);
+    cursor: pointer; letter-spacing: 1px;
+  }
+  .phase-pill:hover { color: var(--c-paper); border-color: var(--c-ash); }
+  .phase-pill.active {
+    background: var(--c-flame); color: var(--c-void); border-color: var(--c-flame);
+  }
+  .nav-links { display: flex; gap: var(--u); }
+  .nav-links a {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    color: var(--c-ash); border: 2px solid var(--c-stone);
+  }
+  .nav-links a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+
+  /* === STAGE (scaled overlay) === */
+  .stage-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: var(--u3);
+    background: repeating-linear-gradient(45deg, #050505 0 8px, #0a0a0a 8px 16px);
+  }
+  .stage-box { position: relative; }
+  .stage {
+    position: relative;
+    width: 1280px; height: 720px;
+    background: var(--c-night);
+    overflow: hidden;
+    border: var(--border-3) solid var(--c-paper);
+    box-shadow: 0 0 0 8px var(--c-void), 0 0 0 12px var(--c-flame);
+    transform-origin: top left;
+  }
+  .obs-corner {
+    position: absolute; bottom: 8px; right: 8px;
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-stone); letter-spacing: 1px;
+    pointer-events: none; z-index: 99;
+  }
+
+  /* === OV CHROME === */
+  .ov-topbar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--c-dusk);
+    border-bottom: 4px solid var(--c-flame);
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; padding: 0 var(--u3); gap: var(--u3);
+    z-index: 10;
+  }
+  .ov-pack {
+    display: flex; align-items: center; gap: var(--u2);
+    font-family: var(--font-title); font-size: 14px; color: var(--c-paper);
+  }
+  .ov-pack .heart {
+    width: 18px; height: 18px; background: var(--c-flame);
+    clip-path: polygon(
+      0 25%, 25% 25%, 25% 0, 41% 0, 41% 25%, 58% 25%, 58% 0, 75% 0, 75% 25%, 100% 25%,
+      100% 75%, 75% 75%, 75% 100%, 58% 100%, 58% 75%, 41% 75%, 41% 100%, 25% 100%, 25% 75%, 0 75%
+    );
+  }
+  .ov-question {
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-flame); text-align: center;
+    text-shadow: 3px 3px 0 var(--c-void);
+    letter-spacing: 2px;
+  }
+  .ov-stats {
+    display: flex; gap: var(--u2); align-items: center;
+    font-family: var(--font-title); font-size: 11px; color: var(--c-bone);
+  }
+  .ov-stats .card-counter {
+    background: var(--c-void); color: var(--c-paper);
+    padding: 4px 8px; border: 2px solid var(--c-paper);
+  }
+  .ov-stats .streamer-voted {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px; border: 2px solid var(--c-gold);
+    background: var(--c-void); color: var(--c-gold);
+    font-size: 9px; letter-spacing: 1px;
+  }
+  .ov-stats .streamer-voted .dot {
+    width: 10px; height: 10px; background: var(--c-gold);
+    animation: pixel-blink 0.6s step-end infinite;
+  }
+  .ov-stats .streamer-voted.pending {
+    color: var(--c-stone); border-color: var(--c-stone);
+  }
+  .ov-stats .streamer-voted.pending .dot { background: var(--c-stone); animation: none; }
+  .ov-stats .streamer-voted.urgent .dot { animation-duration: 0.3s; }
+
+  .ov-bottombar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 44px; background: var(--c-dusk);
+    border-top: 4px solid var(--c-flame);
+    display: flex; align-items: center; padding: 0 var(--u3);
+    z-index: 10;
+    font-family: var(--font-title); font-size: 11px;
+    color: var(--c-bone); gap: var(--u3);
+  }
+  .ov-bottombar .cmd { color: var(--c-flame); }
+  .ov-bottombar .cmd.right { color: var(--c-ice); }
+  .ov-bottombar .alias { color: var(--c-ash); font-size: 9px; }
+
+  .stage-content {
+    position: absolute; top: 60px; bottom: 44px; left: 0; right: 0;
+    overflow: hidden;
+  }
+  .phase { display: none; width: 100%; height: 100%; position: relative; }
+  .phase.active { display: block; }
+
+  /* ============================================================
+     IDLE
+     ============================================================ */
+  .phase-idle.active {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .phase-idle h1 {
+    font-family: var(--font-title); font-size: 64px;
+    color: var(--c-flame); letter-spacing: 4px;
+    text-shadow: 6px 6px 0 var(--c-void);
+    margin-bottom: var(--u3);
+    animation: pixel-blink 1.4s step-end infinite;
+  }
+  .phase-idle .lede {
+    font-family: var(--font-body); font-size: 28px;
+    color: var(--c-bone); margin-bottom: var(--u4);
+    max-width: 60ch;
+  }
+  .phase-idle .lede strong { color: var(--c-flame); font-family: var(--font-title); font-size: 18px; }
+  .phase-idle .pacers { display: flex; gap: var(--u4); margin-top: var(--u3); }
+  .phase-idle .pacer {
+    width: 96px; height: 120px;
+    animation: pixel-bob 1.2s steps(4) infinite;
+  }
+  .phase-idle .pacer:nth-child(2) { animation-delay: 0.2s; }
+  .phase-idle .pacer:nth-child(3) { animation-delay: 0.4s; }
+  .phase-idle .pacer:nth-child(4) { animation-delay: 0.6s; }
+
+  /* ============================================================
+     LOBBY
+     ============================================================ */
+  .phase-lobby .lobby-title {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    text-align: center; width: 100%;
+  }
+  .phase-lobby .lobby-title h2 {
+    font-family: var(--font-title); font-size: 24px; color: var(--c-paper);
+    margin-bottom: var(--u-half);
+  }
+  .phase-lobby .lobby-title h2 .count { color: var(--c-flame); }
+  .phase-lobby .lobby-title h2 .cap { color: var(--c-ash); font-size: 16px; }
+  .phase-lobby .lobby-title p {
+    font-family: var(--font-body); font-size: 24px; color: var(--c-bone);
+  }
+  .phase-lobby .lobby-title p .cmd { color: var(--c-flame); }
+  .phase-lobby .lobby-title p .nocmd { color: var(--c-ice); }
+
+  .phase-lobby .lobby-grid {
+    position: absolute; top: 120px; left: 40px; right: 40px; bottom: 110px;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    gap: 6px;
+    align-content: end;
+  }
+  .phase-lobby .lobby-grid .av {
+    position: relative; display: flex; flex-direction: column; align-items: center;
+  }
+  .phase-lobby .lobby-grid canvas { width: 56px; height: 70px; }
+  .phase-lobby .lobby-grid .nm {
+    font-family: var(--font-title); font-size: 6px; color: var(--c-bone);
+    text-align: center; margin-top: 2px; line-height: 1; max-width: 56px;
+    word-break: break-all;
+  }
+
+  .phase-lobby .countdown {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-title); font-size: 22px;
+    color: var(--c-gold); text-align: center;
+    padding: var(--u) var(--u3);
+    background: var(--c-void);
+    border: 4px solid var(--c-gold);
+  }
+  .phase-lobby .countdown .num {
+    font-size: 28px; animation: pixel-blink 1s step-end infinite;
+  }
+  .phase-lobby .countdown.ready {
+    color: var(--c-success); border-color: var(--c-success);
+  }
+
+  /* ============================================================
+     CARD — single Tinder card
+     ============================================================ */
+  .phase-card .swipe-stage {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: grid; grid-template-columns: 220px 1fr 220px;
+    align-items: center; padding: var(--u3);
+  }
+  .swipe-aff {
+    display: flex; flex-direction: column; align-items: center; gap: var(--u);
+    padding: var(--u3); height: 100%;
+    justify-content: center;
+  }
+  .swipe-aff .arrow {
+    font-family: var(--font-title); font-size: 80px;
+    line-height: 1;
+    animation: pixel-pulse 0.8s step-end infinite;
+  }
+  .swipe-aff.left  .arrow { color: var(--c-danger); text-shadow: 4px 4px 0 var(--c-void); }
+  .swipe-aff.right .arrow { color: var(--c-success); text-shadow: 4px 4px 0 var(--c-void); }
+  .swipe-aff .cmd-box {
+    font-family: var(--font-title); font-size: 28px;
+    padding: var(--u2);
+    background: var(--c-void);
+  }
+  .swipe-aff.left .cmd-box {
+    color: var(--c-danger); border: 4px solid var(--c-danger);
+  }
+  .swipe-aff.right .cmd-box {
+    color: var(--c-success); border: 4px solid var(--c-success);
+  }
+  .swipe-aff .label {
+    font-family: var(--font-title); font-size: 11px; color: var(--c-bone);
+  }
+  .swipe-aff .alias {
+    font-family: var(--font-title); font-size: 8px; color: var(--c-stone);
+    text-align: center; line-height: 1.4;
+  }
+
+  .swipe-card {
+    background: var(--c-paper); color: var(--c-void);
+    border: 8px solid var(--c-void);
+    box-shadow: var(--shadow-pixel-lg);
+    padding: var(--u2);
+    display: flex; flex-direction: column;
+    margin: 0 auto; width: 420px; max-width: 100%; height: 100%;
+    max-height: 540px;
+    position: relative;
+  }
+  .swipe-card .card-image {
+    flex: 1; background: var(--c-night);
+    border: 4px solid var(--c-void);
+    display: flex; align-items: center; justify-content: center;
+    background-image:
+      repeating-linear-gradient(45deg, var(--c-night) 0 12px, var(--c-dusk) 12px 24px);
+    margin-bottom: var(--u);
+    color: var(--c-bone); font-family: var(--font-title); font-size: 12px;
+    position: relative;
+  }
+  .swipe-card .card-image svg {
+    width: 70%; height: 70%;
+  }
+  .swipe-card .card-name {
+    font-family: var(--font-title); font-size: 28px;
+    color: var(--c-void); text-align: center;
+    padding: var(--u);
+  }
+  .swipe-card .card-subtitle {
+    font-family: var(--font-body); font-size: 22px;
+    color: #555; text-align: center;
+    padding: 0 var(--u);
+    border-top: 2px dashed #999;
+    padding-top: var(--u-half);
+  }
+
+  .card-progress {
+    position: absolute; top: 14px; left: 14px;
+    display: flex; gap: 4px;
+    z-index: 5;
+  }
+  .card-progress .pip {
+    width: 18px; height: 6px;
+    background: var(--c-stone);
+    border: 1px solid var(--c-void);
+  }
+  .card-progress .pip.done { background: var(--c-flame); }
+  .card-progress .pip.current { background: var(--c-gold); animation: pixel-blink 0.6s step-end infinite; }
+
+  .card-timer {
+    position: absolute; top: 14px; right: 14px;
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-warn);
+    background: var(--c-void);
+    border: 3px solid var(--c-warn);
+    padding: 3px 8px;
+    z-index: 5;
+  }
+  .card-timer.urgent { color: var(--c-danger); border-color: var(--c-danger); animation: pixel-blink 0.4s step-end infinite; }
+
+  /* ============================================================
+     CARD REVEAL — show streamer's pick + aciertos count
+     ============================================================ */
+  .phase-reveal.active {
+    display: flex; align-items: center; justify-content: center;
+  }
+  .reveal-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: var(--u3);
+    width: 100%; padding: 0 var(--u3);
+  }
+  .reveal-card-mini {
+    width: 280px; height: 360px; margin-left: auto;
+    background: var(--c-paper); color: var(--c-void);
+    border: 6px solid var(--c-void);
+    padding: var(--u);
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-pixel-lg);
+  }
+  .reveal-card-mini .img {
+    flex: 1; background-image:
+      repeating-linear-gradient(45deg, var(--c-night) 0 12px, var(--c-dusk) 12px 24px);
+    border: 3px solid var(--c-void);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--c-bone); font-family: var(--font-title); font-size: 10px;
+  }
+  .reveal-card-mini .nm {
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-void); text-align: center; padding: var(--u);
+  }
+
+  .reveal-pick {
+    display: flex; flex-direction: column; align-items: center; gap: var(--u);
+    text-align: center;
+  }
+  .reveal-pick .stamp {
+    font-family: var(--font-title); font-size: 28px;
+    padding: var(--u2) var(--u3);
+    border: 6px solid;
+    background: var(--c-void);
+    transform: rotate(-6deg);
+    animation: pixel-pulse 0.4s step-end infinite;
+  }
+  .reveal-pick.left  .stamp { color: var(--c-danger); border-color: var(--c-danger); }
+  .reveal-pick.right .stamp { color: var(--c-success); border-color: var(--c-success); }
+  .reveal-pick .small {
+    font-family: var(--font-title); font-size: 10px; color: var(--c-ash);
+  }
+  .reveal-pick .alias {
+    font-family: var(--font-title); font-size: 11px; color: var(--c-paper);
+  }
+
+  .reveal-aciertos {
+    margin-right: auto;
+    background: var(--c-dusk);
+    border: 4px solid var(--c-success);
+    padding: var(--u2) var(--u3);
+    text-align: center;
+  }
+  .reveal-aciertos .lbl {
+    font-family: var(--font-title); font-size: 10px; color: var(--c-ash);
+    margin-bottom: var(--u);
+  }
+  .reveal-aciertos .big {
+    font-family: var(--font-title); font-size: 64px;
+    color: var(--c-success);
+    text-shadow: 4px 4px 0 var(--c-void);
+  }
+  .reveal-aciertos .sub {
+    font-family: var(--font-body); font-size: 22px; color: var(--c-bone);
+    margin-top: var(--u);
+  }
+  .reveal-aciertos .sub strong { color: var(--c-flame); }
+
+  /* ============================================================
+     TALLY TRANSITION — 11 columns 0..10 aciertos
+     ============================================================ */
+  .tally-head {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    text-align: center; z-index: 5;
+  }
+  .tally-head h2 {
+    font-family: var(--font-title); font-size: 18px; color: var(--c-flame);
+    text-shadow: 3px 3px 0 var(--c-void);
+    animation: pixel-blink 0.6s step-end infinite;
+  }
+  .tally-head p {
+    font-family: var(--font-body); font-size: 20px; color: var(--c-bone);
+    margin-top: 4px;
+  }
+  .phase-tally .tally-head,
+  .phase-criba .tally-head {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  }
+
+  .columns {
+    position: absolute; top: 64px; left: 40px; right: 40px; bottom: 80px;
+    display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px;
+  }
+  .col {
+    background: var(--c-dusk);
+    border: 2px solid var(--c-stone);
+    padding: 4px;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .col .tier {
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-paper); text-align: center;
+    padding: var(--u-half);
+    background: var(--c-void);
+    border-bottom: 2px solid var(--c-stone);
+  }
+  .col .tier .label {
+    display: block; font-size: 6px; color: var(--c-ash);
+    letter-spacing: 1px; margin-top: 2px;
+  }
+  .col .count {
+    font-family: var(--font-title); font-size: 12px;
+    color: var(--c-gold); text-align: center;
+    padding: 2px;
+    background: var(--c-void);
+    border-bottom: 2px dashed var(--c-stone);
+  }
+  .col .bodies {
+    flex: 1;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px;
+    align-content: end; padding: 2px;
+    overflow: hidden;
+  }
+  .col .bodies canvas { width: 32px; height: 40px; }
+  .col .bodies canvas.migrating {
+    animation: migrate-in 0.4s steps(4);
+  }
+  @keyframes migrate-in {
+    0%   { transform: translateY(-300px) scale(1.2); opacity: 0; }
+    50%  { transform: translateY(-100px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .col.high-tier { border-color: var(--c-gold); }
+  .col.high-tier .tier { color: var(--c-gold); }
+
+  /* Bonus bar */
+  .bonus-bar {
+    position: absolute; left: 40px; right: 40px; bottom: 16px;
+    background: var(--c-void);
+    border: 4px solid var(--c-paper);
+    padding: var(--u) var(--u2);
+    display: grid; grid-template-columns: auto 1fr auto; gap: var(--u3);
+    align-items: center;
+    z-index: 5;
+  }
+  .bonus-bar .lbl {
+    font-family: var(--font-title); font-size: 12px; color: var(--c-ash);
+  }
+  .bonus-bar .nums {
+    font-family: var(--font-title); font-size: 16px; color: var(--c-paper);
+    display: flex; gap: var(--u3);
+  }
+  .bonus-bar .nums strong { color: var(--c-success); }
+  .bonus-bar .bonus-val {
+    font-family: var(--font-title); font-size: 22px; color: var(--c-gold);
+    text-shadow: 3px 3px 0 var(--c-void);
+    text-align: right;
+  }
+  .bonus-bar .bonus-val small {
+    display: block; font-size: 10px; color: var(--c-ash); margin-top: 2px;
+  }
+
+  /* ============================================================
+     CRIBA — same 11 columns but clickable, some eliminated
+     ============================================================ */
+  .phase-criba .col {
+    cursor: pointer;
+  }
+  .phase-criba .col:hover {
+    border-color: var(--c-flame);
+  }
+  .phase-criba .col.eliminated {
+    border-color: var(--c-danger);
+    background: var(--c-night);
+  }
+  .phase-criba .col.eliminated .tier {
+    color: var(--c-danger);
+  }
+  .phase-criba .col.eliminated canvas {
+    animation: column-fall 1.6s steps(8) forwards;
+  }
+  .phase-criba .col.eliminated canvas:nth-child(2n)  { animation-delay: 0.05s; }
+  .phase-criba .col.eliminated canvas:nth-child(3n)  { animation-delay: 0.1s; }
+  .phase-criba .col.eliminated canvas:nth-child(5n)  { animation-delay: 0.15s; }
+  .phase-criba .col.eliminated::after {
+    content: '×'; position: absolute; top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-title); font-size: 64px;
+    color: var(--c-danger); text-shadow: 4px 4px 0 var(--c-void);
+    pointer-events: none; z-index: 10;
+  }
+
+  /* ============================================================
+     VICTORY
+     ============================================================ */
+  .phase-victory.active {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: var(--u2) var(--u3); gap: var(--u);
+  }
+  .victory-title {
+    font-family: var(--font-title); font-size: 44px;
+    color: var(--c-gold);
+    text-shadow: 5px 5px 0 var(--c-flame-dk);
+    letter-spacing: 4px;
+    animation: pixel-pulse 0.5s step-end infinite;
+    margin-top: var(--u);
+  }
+  .victory-sub {
+    font-family: var(--font-body); font-size: 24px; color: var(--c-bone);
+  }
+  .victory-sub strong { color: var(--c-success); font-family: var(--font-title); font-size: 18px; }
+
+  .game-board {
+    width: 100%; max-width: 980px;
+    background: var(--c-dusk);
+    border: 4px solid var(--c-paper);
+    box-shadow: var(--shadow-pixel-lg);
+    display: grid; grid-template-columns: 60px 60px 1fr 80px 80px;
+    overflow: hidden;
+  }
+  .game-board .gb-row {
+    display: contents;
+  }
+  .game-board .gb-row > * {
+    padding: 6px 8px;
+    border-bottom: 1px dashed var(--c-stone);
+    font-family: var(--font-body); font-size: 18px;
+    display: flex; align-items: center;
+  }
+  .game-board .gb-row.head > * {
+    background: var(--c-night);
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-ash); letter-spacing: 1px;
+    border-bottom: 4px solid var(--c-flame);
+  }
+  .game-board .rk { justify-content: center; font-family: var(--font-title); font-size: 12px; color: var(--c-paper); }
+  .game-board .av { justify-content: center; }
+  .game-board .av canvas { width: 28px; height: 35px; }
+  .game-board .nick { color: var(--c-paper); font-family: var(--font-title); font-size: 11px; }
+  .game-board .acs  { justify-content: flex-end; color: var(--c-success); font-family: var(--font-title); font-size: 12px; }
+  .game-board .pts  { justify-content: flex-end; color: var(--c-gold); font-family: var(--font-title); font-size: 12px; }
+  .game-board .gb-row.gold .rk, .game-board .gb-row.gold .nick { color: var(--c-gold); }
+
+  .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti i {
+    position: absolute; width: 8px; height: 8px;
+    top: -16px;
+    animation: confetti-fall 2s steps(20) infinite linear;
+  }
+</style>
+</head>
+<body data-screen-label="Overlay">
+
+<header class="topbar">
+  <h1>OVERLAY · 1280×720 · /overlay</h1>
+  <div class="phase-pills" id="phase-pills"></div>
+  <div class="nav-links">
+    <a href="index.html">← Inicio</a>
+    <a href="streamer.html">Panel →</a>
+  </div>
+</header>
+
+<div class="stage-wrap">
+  <div class="stage-box" id="stage-box">
+  <div class="stage scanlines" id="stage">
+
+    <div class="ov-topbar" id="ov-topbar">
+      <div class="ov-pack">
+        <span class="heart"></span>
+        <span id="pack-name">RPGs CLÁSICOS</span>
+      </div>
+      <div class="ov-question" id="pack-question">¿LO HAS JUGADO ENTERO?</div>
+      <div class="ov-stats">
+        <div class="card-counter" id="card-counter">CARTA 3 / 10</div>
+        <div class="streamer-voted" id="streamer-voted">
+          <span class="dot"></span> STREAMER DECIDIÓ
+        </div>
+      </div>
+    </div>
+
+    <div class="stage-content" id="stage-content">
+
+      <!-- IDLE -->
+      <div class="phase phase-idle" data-phase="idle">
+        <h1>STAND BY</h1>
+        <p class="lede">El streamer aún no ha abierto un lobby.<br>Espera a que pulse <strong>ABRIR LOBBY</strong> y podrás unirte.</p>
+        <div class="pacers">
+          <canvas class="pacer" data-nick="pixel_pacer"></canvas>
+          <canvas class="pacer" data-nick="ramenboss22"></canvas>
+          <canvas class="pacer" data-nick="bitwarrior"></canvas>
+          <canvas class="pacer" data-nick="crt_kid"></canvas>
+        </div>
+      </div>
+
+      <!-- LOBBY -->
+      <div class="phase phase-lobby" data-phase="lobby">
+        <div class="lobby-title">
+          <h2>LOBBY ABIERTO · <span class="count" id="lobby-count">23</span> <span class="cap">/ 60</span></h2>
+          <p>Escribe <span class="cmd">!join</span> en el chat para entrar · <span class="nocmd">!leave</span> para salir</p>
+        </div>
+        <div class="lobby-grid" id="lobby-grid"></div>
+        <div class="countdown" id="lobby-countdown">
+          EMPIEZA EN <span class="num">0:48</span>
+        </div>
+      </div>
+
+      <!-- CARD -->
+      <div class="phase phase-card" data-phase="card">
+        <div class="swipe-stage">
+          <div class="swipe-aff left">
+            <div class="arrow">←</div>
+            <div class="cmd-box">!izq</div>
+            <div class="label">NO</div>
+            <div class="alias">aliases<br>!l · !1 · !no</div>
+          </div>
+
+          <div class="swipe-card">
+            <div class="card-progress" id="card-progress"></div>
+            <div class="card-image">
+              <svg viewBox="0 0 80 80">
+                <g>
+                  <!-- Chrono-style sword + sparkle -->
+                  <rect x="36" y="10" width="6" height="40" fill="#d9d2e8"/>
+                  <rect x="34" y="12" width="2" height="36" fill="#7a6a99"/>
+                  <rect x="42" y="12" width="2" height="36" fill="#ffffff"/>
+                  <rect x="30" y="48" width="18" height="4" fill="#b8860b"/>
+                  <rect x="32" y="52" width="14" height="4" fill="#b85aff"/>
+                  <rect x="36" y="56" width="6" height="8" fill="#5a3a1f"/>
+                  <rect x="34" y="64" width="10" height="2" fill="#b8860b"/>
+                  <!-- sparkles -->
+                  <rect x="58" y="18" width="2" height="2" fill="#ffd33d"/>
+                  <rect x="60" y="16" width="2" height="2" fill="#ffd33d"/>
+                  <rect x="18" y="28" width="2" height="2" fill="#5fde6f"/>
+                  <rect x="16" y="30" width="2" height="2" fill="#5fde6f"/>
+                  <rect x="52" y="60" width="2" height="2" fill="#b85aff"/>
+                </g>
+              </svg>
+            </div>
+            <div class="card-name">CHRONO TRIGGER</div>
+            <div class="card-subtitle">SNES · 1995 · Square</div>
+            <div class="card-timer" id="card-timer">0:07</div>
+          </div>
+
+          <div class="swipe-aff right">
+            <div class="arrow">→</div>
+            <div class="cmd-box">!der</div>
+            <div class="label">SÍ</div>
+            <div class="alias">aliases<br>!r · !2 · !si</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD REVEAL -->
+      <div class="phase phase-reveal" data-phase="card_reveal">
+        <div class="reveal-grid">
+          <div class="reveal-card-mini">
+            <div class="img">[CHRONO]</div>
+            <div class="nm">CHRONO TRIGGER</div>
+          </div>
+          <div class="reveal-pick right">
+            <div class="alias">EL STREAMER ELIGIÓ</div>
+            <div class="stamp">→ DER · SÍ</div>
+            <div class="small">"lo terminé tres veces,<br>incluso el final secreto"</div>
+          </div>
+          <div class="reveal-aciertos">
+            <div class="lbl">ACERTARON</div>
+            <div class="big">94</div>
+            <div class="sub">de <strong>222</strong> votos (42%)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TALLY TRANSITION -->
+      <div class="phase phase-tally" data-phase="tally_transition">
+        <div class="tally-head">
+          <h2>¡RECUENTO!</h2>
+          <p>Los avatares vuelan a su tier según aciertos en las 10 cartas</p>
+        </div>
+        <div class="columns" id="tally-cols"></div>
+        <div class="bonus-bar">
+          <div class="lbl">SUPERVIVIENTES PROVISIONALES</div>
+          <div class="nums"><strong id="tally-surv">60</strong> · bote 100 pts</div>
+          <div class="bonus-val">
+            +1 PT <small>cada uno · sin criba</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRIBA -->
+      <div class="phase phase-criba" data-phase="criba">
+        <div class="tally-head">
+          <h2 style="color:var(--c-danger)">¡CRIBA!</h2>
+          <p>El streamer está eliminando tiers a dedo</p>
+        </div>
+        <div class="columns" id="criba-cols"></div>
+        <div class="bonus-bar">
+          <div class="lbl">SUPERVIVIENTES ACTUALES</div>
+          <div class="nums"><strong id="criba-surv">14</strong> · bote 100 pts</div>
+          <div class="bonus-val">
+            +<span id="criba-bonus">7</span> PTS <small>por superviviente · floor(100/14)</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- VICTORY -->
+      <div class="phase phase-victory" data-phase="victory">
+        <div class="victory-title">¡N GANADORES!</div>
+        <div class="victory-sub">Han sobrevivido a la criba <strong id="v-surv">14</strong> espectadores</div>
+        <div class="game-board" id="game-board"></div>
+        <div class="confetti" id="confetti"></div>
+      </div>
+
+    </div>
+
+    <div class="ov-bottombar" id="ov-bottombar">
+      <span>VOTA EN CHAT:</span>
+      <span><span class="cmd">!izq</span> = NO</span>
+      <span><span class="cmd right">!der</span> = SÍ</span>
+      <span class="alias">aliases · !l/!r · !1/!2 · !si/!no</span>
+      <span style="margin-left:auto;color:var(--c-ash)" class="alias">!join · !leave · /leaderboard</span>
+    </div>
+
+    <div class="obs-corner">OBS · 1280×720 · 60fps · /overlay</div>
+  </div>
+  </div>
+</div>
+
+<script src="assets/sprite.js"></script>
+<script>
+  const PHASES = [
+    { id: 'idle',             label: 'IDLE' },
+    { id: 'lobby',            label: 'LOBBY' },
+    { id: 'card',             label: 'CARD (1/10)' },
+    { id: 'card_reveal',      label: 'REVEAL' },
+    { id: 'tally_transition', label: 'TALLY' },
+    { id: 'criba',            label: 'CRIBA' },
+    { id: 'victory',          label: 'VICTORY' },
+  ];
+
+  // === Phase pills ===
+  const pills = document.getElementById('phase-pills');
+  PHASES.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'phase-pill';
+    b.dataset.phase = p.id;
+    b.textContent = p.label;
+    b.addEventListener('click', () => setPhase(p.id));
+    pills.appendChild(b);
+  });
+
+  function makeNicks(n, seed) {
+    const a = ['pixel','bit','glitch','crt','retro','snek','ramen','byte','poke','ghost','neon','arcade','boss','noob','meta','ninja','dragon','cyber','dark','space','ace','combo','lvl','epic','tofu','wraith','bone','fuzz','blaze','toxic'];
+    const b = ['queen','warrior','god','kid','lord','master','baby','slayer','wizard','beast','reaper','jr','sr','fanatic','head','head42','99','77','xx','22','7'];
+    const out = []; let s = seed || 1;
+    for (let i = 0; i < n; i++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p1 = a[s % a.length];
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p2 = b[s % b.length];
+      out.push(p1 + '_' + p2);
+    }
+    return out;
+  }
+
+  function setPhase(id) {
+    document.querySelectorAll('.phase').forEach(p => p.classList.toggle('active', p.dataset.phase === id));
+    document.querySelectorAll('.phase-pill').forEach(b => b.classList.toggle('active', b.dataset.phase === id));
+
+    // streamer-voted indicator state
+    const sv = document.getElementById('streamer-voted');
+    sv.classList.remove('pending','urgent');
+    if (id === 'idle' || id === 'lobby') sv.classList.add('pending');
+    if (id === 'card') sv.classList.add('urgent');   // simulate near-end-of-vote
+
+    // Card counter visibility
+    const cc = document.getElementById('card-counter');
+    cc.style.display = (id === 'idle' || id === 'lobby') ? 'none' : '';
+    cc.textContent = id === 'victory' ? 'PARTIDA · 10/10' : 'CARTA 3 / 10';
+
+    // Question banner — hide for non-card phases? Keep visible per spec ("during whole partida")
+    const q = document.getElementById('pack-question');
+    q.style.opacity = (id === 'idle' || id === 'lobby') ? 0.35 : 1;
+
+    // Bottom bar copy
+    const bb = document.getElementById('ov-bottombar');
+    if (id === 'idle') {
+      bb.innerHTML = '<span>STREAM EN PAUSA · espera al streamer</span><span style="margin-left:auto;color:var(--c-ash)" class="alias">/leaderboard</span>';
+    } else if (id === 'lobby') {
+      bb.innerHTML = '<span>ÚNETE:</span><span><span class="cmd">!join</span></span><span>SAL:</span><span><span class="cmd right">!leave</span></span><span style="margin-left:auto;color:var(--c-ash)" class="alias">cap 60 · cierre en 0:48</span>';
+    } else if (id === 'card') {
+      bb.innerHTML = '<span>VOTA EN CHAT:</span><span><span class="cmd">!izq</span> = NO</span><span><span class="cmd right">!der</span> = SÍ</span><span class="alias">aliases · !l/!r · !1/!2 · !si/!no</span><span style="margin-left:auto;color:var(--c-gold)">SÓLO PRIMER VOTO CUENTA</span>';
+    } else if (id === 'card_reveal') {
+      bb.innerHTML = '<span style="color:var(--c-gold)">REVELANDO...</span><span style="margin-left:auto;color:var(--c-ash)" class="alias">siguiente carta en breve</span>';
+    } else if (id === 'tally_transition') {
+      bb.innerHTML = '<span style="color:var(--c-flame)">LAS 10 CARTAS HAN TERMINADO</span><span style="margin-left:auto;color:var(--c-ash)" class="alias">preparando criba...</span>';
+    } else if (id === 'criba') {
+      bb.innerHTML = '<span style="color:var(--c-danger)">⚠ CRIBA EN CURSO</span><span class="alias" style="color:var(--c-bone)">el streamer elimina tiers · sin orden · sin undo</span><span style="margin-left:auto;color:var(--c-ash)" class="alias">en directo</span>';
+    } else if (id === 'victory') {
+      bb.innerHTML = '<span style="color:var(--c-gold)">¡PARTIDA TERMINADA!</span><span class="alias" style="color:var(--c-bone)">tabla visible 15-20s</span><span style="margin-left:auto;color:var(--c-paper)">/leaderboard global</span>';
+    }
+
+    // Render dynamic content per phase
+    if (id === 'lobby') renderLobby();
+    if (id === 'card') renderCard();
+    if (id === 'tally_transition') renderTally(false);
+    if (id === 'criba') renderTally(true);
+    if (id === 'victory') renderVictory();
+  }
+
+  // === LOBBY ===
+  function renderLobby() {
+    const grid = document.getElementById('lobby-grid');
+    grid.innerHTML = '';
+    const nicks = makeNicks(23, 7777);
+    nicks.forEach(name => {
+      const av = document.createElement('div');
+      av.className = 'av';
+      const cv = document.createElement('canvas');
+      SpriteEngine.renderToCanvas(cv, name, {});
+      av.appendChild(cv);
+      const nm = document.createElement('div'); nm.className = 'nm';
+      nm.textContent = '@' + name.slice(0, 10);
+      av.appendChild(nm);
+      grid.appendChild(av);
+    });
+    document.getElementById('lobby-count').textContent = nicks.length;
+    const cd = document.getElementById('lobby-countdown');
+    cd.classList.toggle('ready', nicks.length >= 10);
+  }
+
+  // === CARD progress ===
+  function renderCard() {
+    const cp = document.getElementById('card-progress');
+    cp.innerHTML = '';
+    const current = 3;
+    for (let i = 0; i < 10; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip' + (i < current - 1 ? ' done' : (i === current - 1 ? ' current' : ''));
+      cp.appendChild(pip);
+    }
+  }
+
+  // === TALLY / CRIBA — 11 columns 0..10 ===
+  // distribution of viewers across tiers (sums ~60)
+  // sample dist (Poisson-ish around 5 aciertos)
+  const TIER_DISTRIBUTION = [1, 1, 3, 5, 7, 12, 11, 9, 6, 3, 2]; // 0..10 = total 60
+  // criba: which tiers are eliminated
+  const CRIBA_ELIMINATED = [0, 1, 2, 3, 4, 6, 9]; // streamer's whimsical picks
+
+  function renderTally(asCriba) {
+    const host = document.getElementById(asCriba ? 'criba-cols' : 'tally-cols');
+    host.innerHTML = '';
+    let totalSurv = 0;
+    for (let t = 0; t <= 10; t++) {
+      const col = document.createElement('div');
+      col.className = 'col' + (t >= 8 ? ' high-tier' : '');
+      if (asCriba && CRIBA_ELIMINATED.includes(t)) col.classList.add('eliminated');
+      const tier = document.createElement('div'); tier.className = 'tier';
+      tier.innerHTML = `${t}<span class="label">acierto${t===1?'':'s'}</span>`;
+      col.appendChild(tier);
+      const cnt = document.createElement('div'); cnt.className = 'count';
+      cnt.textContent = TIER_DISTRIBUTION[t] + ' viewers';
+      col.appendChild(cnt);
+      const bodies = document.createElement('div'); bodies.className = 'bodies';
+      const tierNicks = makeNicks(TIER_DISTRIBUTION[t], 1000 + t);
+      tierNicks.forEach((n, i) => {
+        const cv = document.createElement('canvas');
+        if (!asCriba) cv.className = 'migrating';
+        cv.style.animationDelay = (t * 0.06 + i * 0.03) + 's';
+        const state = asCriba && CRIBA_ELIMINATED.includes(t) ? 'eliminated' : 'voted';
+        SpriteEngine.renderToCanvas(cv, n, { state });
+        bodies.appendChild(cv);
+      });
+      col.appendChild(bodies);
+      host.appendChild(col);
+
+      if (!asCriba || !CRIBA_ELIMINATED.includes(t)) {
+        totalSurv += TIER_DISTRIBUTION[t];
+      }
+    }
+    if (asCriba) {
+      document.getElementById('criba-surv').textContent = totalSurv;
+      const bonus = Math.floor(100 / Math.max(1, totalSurv));
+      document.getElementById('criba-bonus').textContent = bonus;
+    } else {
+      document.getElementById('tally-surv').textContent = totalSurv;
+    }
+  }
+
+  // === VICTORY ===
+  function renderVictory() {
+    // Survivors are tiers not eliminated (using same distribution + criba)
+    const survivorTiers = [];
+    for (let t = 0; t <= 10; t++) {
+      if (!CRIBA_ELIMINATED.includes(t)) survivorTiers.push(t);
+    }
+    const surv = [];
+    survivorTiers.forEach(t => {
+      const tierNicks = makeNicks(TIER_DISTRIBUTION[t], 1000 + t);
+      tierNicks.forEach(n => surv.push({ nick: n, aciertos: t }));
+    });
+    surv.sort((a, b) => b.aciertos - a.aciertos);
+    document.getElementById('v-surv').textContent = surv.length;
+    document.querySelector('.victory-title').textContent = `¡${surv.length} GANADORES!`;
+
+    const bonus = Math.floor(100 / surv.length);
+    const board = document.getElementById('game-board');
+    board.innerHTML = '';
+    const head = document.createElement('div'); head.className = 'gb-row head';
+    head.innerHTML = `<span class="rk">#</span><span class="av"></span><span class="nick">NICK</span><span class="acs">ACIERTOS</span><span class="pts">PTS</span>`;
+    board.appendChild(head);
+    surv.slice(0, 9).forEach((s, i) => {
+      const r = document.createElement('div');
+      r.className = 'gb-row' + (i === 0 ? ' gold' : '');
+      const total = s.aciertos * 10 + bonus;
+      r.innerHTML = `
+        <span class="rk">${i + 1}</span>
+        <span class="av"><canvas></canvas></span>
+        <span class="nick">@${s.nick}</span>
+        <span class="acs">${s.aciertos}/10</span>
+        <span class="pts">+${total}</span>
+      `;
+      board.appendChild(r);
+      SpriteEngine.renderToCanvas(r.querySelector('canvas'), s.nick, { state: i === 0 ? 'winner' : 'voted' });
+    });
+    if (surv.length > 9) {
+      const more = document.createElement('div'); more.className = 'gb-row';
+      more.innerHTML = `<span class="rk">+</span><span class="av"></span><span class="nick">…y ${surv.length - 9} más</span><span class="acs"></span><span class="pts"></span>`;
+      board.appendChild(more);
+    }
+
+    // confetti
+    const cf = document.getElementById('confetti');
+    cf.innerHTML = '';
+    const colors = ['#ff3c8b','#4ad4d4','#5fde6f','#ffd33d','#c97aff','#ff8a3d'];
+    for (let i = 0; i < 80; i++) {
+      const p = document.createElement('i');
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 2) + 's';
+      p.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+      cf.appendChild(p);
+    }
+  }
+
+  // === Stage scaling ===
+  function fitStage() {
+    const stage = document.getElementById('stage');
+    const box = document.getElementById('stage-box');
+    const wrap = box.parentElement;
+    const availW = wrap.clientWidth - 48;
+    const availH = wrap.clientHeight - 48;
+    const s = Math.min(1, availW / 1280, availH / 720);
+    stage.style.transform = `scale(${s})`;
+    box.style.width  = (1280 * s) + 'px';
+    box.style.height = (720 * s) + 'px';
+  }
+  window.addEventListener('resize', fitStage);
+
+  fitStage();
+  setPhase('card');   // demo on the most interesting phase
+</script>
+
+</body>
+</html>

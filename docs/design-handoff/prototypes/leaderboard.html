@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Leaderboard</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; min-height: 100vh; }
+
+  .nav {
+    background: var(--c-night); padding: var(--u2) var(--u3);
+    display: flex; gap: var(--u2); align-items: center;
+    border-bottom: var(--border-1) solid var(--c-stone);
+    flex-wrap: wrap;
+  }
+  .nav h1 { font-size: var(--fs-md); color: var(--c-flame); margin-right: auto; }
+  .nav a {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    border: 2px solid var(--c-stone); color: var(--c-ash);
+  }
+  .nav a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+
+  .page {
+    max-width: 1200px; margin: 0 auto;
+    padding: var(--u4) var(--u3) var(--u8);
+  }
+
+  /* === Hero === */
+  .hero {
+    background: var(--c-dusk);
+    border: var(--border-3) solid var(--c-paper);
+    box-shadow: var(--shadow-pixel-lg);
+    padding: var(--u4); margin-bottom: var(--u4);
+    display: grid; grid-template-columns: 1fr auto; gap: var(--u4);
+    align-items: end;
+  }
+  .hero h1 {
+    font-size: 48px; color: var(--c-flame);
+    letter-spacing: 3px;
+    text-shadow: 5px 5px 0 var(--c-void);
+    margin-bottom: var(--u);
+  }
+  .hero .subt {
+    font-family: var(--font-body); font-size: 26px; color: var(--c-bone);
+    margin-bottom: var(--u2);
+  }
+  .hero .meta {
+    display: flex; gap: var(--u3); margin-top: var(--u2);
+    font-family: var(--font-title); font-size: 10px; color: var(--c-ash);
+  }
+  .hero .meta strong {
+    display: block; color: var(--c-paper); font-size: 14px; margin-top: var(--u-half);
+  }
+
+  /* === Search === */
+  .search-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: var(--u);
+    margin-bottom: var(--u3);
+  }
+  .pixel-input {
+    background: var(--c-void); color: var(--c-paper);
+    border: 3px solid var(--c-bone); padding: var(--u2);
+    font-family: var(--font-body); font-size: 22px;
+    box-shadow: var(--bevel-down);
+  }
+  .pixel-input:focus { outline: 0; border-color: var(--c-flame); }
+  .pixel-select {
+    background: var(--c-void); color: var(--c-paper);
+    border: 3px solid var(--c-bone); padding: var(--u2);
+    font-family: var(--font-title); font-size: 10px;
+    cursor: pointer;
+  }
+  button.search-btn {
+    font-family: var(--font-title); font-size: 12px;
+    padding: var(--u2) var(--u3);
+    background: var(--c-flame); color: var(--c-void);
+    border: 3px solid var(--c-paper);
+    box-shadow: var(--shadow-pixel);
+    cursor: pointer; letter-spacing: 1px;
+  }
+
+  /* === Filter chips === */
+  .filter-chips {
+    display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: var(--u3);
+  }
+  .chip {
+    font-family: var(--font-title); font-size: 10px;
+    padding: var(--u-half) var(--u);
+    background: var(--c-dusk); color: var(--c-bone);
+    border: 2px solid var(--c-stone);
+    cursor: pointer;
+  }
+  .chip.active {
+    background: var(--c-flame); color: var(--c-void); border-color: var(--c-flame);
+  }
+  .chip:hover { color: var(--c-paper); border-color: var(--c-ash); }
+  .chip.active:hover { color: var(--c-void); }
+
+  /* === Podium === */
+  .podium {
+    display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: var(--u2);
+    align-items: end; margin-bottom: var(--u4);
+  }
+  .podium-cell {
+    text-align: center;
+    background: var(--c-dusk);
+    border: var(--border-2) solid var(--c-paper);
+    padding: var(--u2);
+    box-shadow: var(--shadow-pixel-lg);
+    position: relative;
+  }
+  .podium-cell .rank {
+    position: absolute; top: -16px; left: -16px;
+    font-family: var(--font-title); font-size: 24px;
+    color: var(--c-void); background: var(--c-paper);
+    padding: var(--u) var(--u2);
+    border: 4px solid var(--c-void);
+    box-shadow: var(--shadow-pixel);
+  }
+  .podium-cell.gold   { border-color: var(--c-gold); }
+  .podium-cell.gold   .rank { background: var(--c-gold); }
+  .podium-cell.silver { border-color: var(--c-silver); }
+  .podium-cell.silver .rank { background: var(--c-silver); }
+  .podium-cell.bronze { border-color: var(--c-bronze); }
+  .podium-cell.bronze .rank { background: var(--c-bronze); color: var(--c-paper); }
+
+  .podium-cell canvas {
+    width: 144px; height: 180px;
+    margin: 0 auto var(--u);
+  }
+  .podium-cell.gold canvas { width: 168px; height: 210px; }
+  .podium-cell .nick {
+    font-family: var(--font-title); font-size: 14px; color: var(--c-paper);
+    margin-bottom: var(--u-half); word-break: break-all;
+  }
+  .podium-cell .pts {
+    font-family: var(--font-title); font-size: 24px;
+    color: var(--c-gold);
+    text-shadow: 3px 3px 0 var(--c-void);
+  }
+  .podium-cell.silver .pts { color: var(--c-silver); }
+  .podium-cell.bronze .pts { color: var(--c-bronze); }
+  .podium-cell .stats {
+    margin-top: var(--u); font-family: var(--font-body); font-size: 18px;
+    color: var(--c-ash);
+  }
+  .podium-cell.gold canvas { animation: pixel-bob 0.8s steps(4) infinite; }
+
+  /* === Table === */
+  .lb-table {
+    width: 100%;
+    background: var(--c-dusk);
+    border: var(--border-2) solid var(--c-stone);
+    box-shadow: var(--shadow-pixel-lg);
+    overflow: hidden;
+  }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 56px 60px 1fr 100px 100px 100px 80px;
+    gap: var(--u2);
+    padding: var(--u) var(--u2);
+    align-items: center;
+    border-bottom: var(--border-1) dashed var(--c-stone);
+    font-family: var(--font-body); font-size: 20px;
+  }
+  .lb-row:last-child { border-bottom: 0; }
+  .lb-row.head {
+    background: var(--c-night);
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-ash); letter-spacing: 1px;
+    border-bottom: 4px solid var(--c-flame);
+  }
+  .lb-row .rk {
+    font-family: var(--font-title); font-size: 14px;
+    color: var(--c-paper); text-align: center;
+  }
+  .lb-row.gold   .rk { color: var(--c-gold); }
+  .lb-row.silver .rk { color: var(--c-silver); }
+  .lb-row.bronze .rk { color: var(--c-bronze); }
+  .lb-row .av canvas { width: 36px; height: 45px; }
+  .lb-row .nick { color: var(--c-paper); font-family: var(--font-title); font-size: 10px; word-break: break-all; }
+  .lb-row .pts { color: var(--c-gold); text-align: right; font-family: var(--font-title); font-size: 12px; }
+  .lb-row .stat { color: var(--c-bone); text-align: right; }
+  .lb-row .stat.win { color: var(--c-success); }
+  .lb-row .stat.elim { color: var(--c-danger); }
+  .lb-row .pack { color: var(--c-ash); font-size: 14px; text-align: right; word-break: break-all; }
+  .lb-row.me { background: var(--c-flame-dk); }
+  .lb-row.me .rk, .lb-row.me .nick { color: var(--c-paper); }
+  .lb-row.me::before {
+    content: '►'; color: var(--c-flame); font-family: var(--font-title); font-size: 14px;
+  }
+  .lb-row:hover:not(.head) { background: var(--c-night); }
+
+  /* === Pagination === */
+  .pagination {
+    display: flex; justify-content: center; gap: var(--u); margin-top: var(--u3);
+  }
+  .pagination .pgbtn {
+    font-family: var(--font-title); font-size: 10px;
+    padding: var(--u) var(--u2);
+    background: var(--c-dusk); color: var(--c-bone);
+    border: 2px solid var(--c-stone); cursor: pointer;
+  }
+  .pagination .pgbtn.current { background: var(--c-flame); color: var(--c-void); border-color: var(--c-flame); }
+
+  /* === Empty state for search === */
+  .lb-empty {
+    padding: var(--u4); text-align: center;
+    font-family: var(--font-body); font-size: 22px; color: var(--c-ash);
+    display: none;
+  }
+  .lb-empty.show { display: block; }
+  .lb-empty strong { color: var(--c-flame); font-family: var(--font-title); font-size: 12px; }
+
+  @media (max-width: 800px) {
+    .lb-row { grid-template-columns: 40px 40px 1fr 80px; gap: var(--u); font-size: 16px; }
+    .lb-row .stat, .lb-row .pack { display: none; }
+    .lb-row.head .stat, .lb-row.head .pack { display: none; }
+    .podium { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body data-screen-label="Leaderboard">
+
+<header class="nav">
+  <h1>LEADERBOARD</h1>
+  <a href="index.html">← Inicio</a>
+  <a href="design-system.html">Sistema</a>
+  <a href="overlay.html">Overlay</a>
+  <a href="streamer.html">Panel</a>
+  <a href="packs.html">Packs</a>
+</header>
+
+<div class="page">
+
+  <section class="hero">
+    <div>
+      <h1>HALL OF FAME</h1>
+      <div class="subt">Top 100 espectadores de todas las partidas. Tu rank vive entre stream y stream.</div>
+      <div class="meta">
+        <div>PARTIDAS JUGADAS<strong>237</strong></div>
+        <div>JUGADORES ÚNICOS<strong>4,892</strong></div>
+        <div>VOTOS TOTALES<strong>187,420</strong></div>
+        <div>RONDA MÁS LARGA<strong>RPGs CLÁSICOS · 11</strong></div>
+      </div>
+    </div>
+    <canvas id="hero-sprite" style="width:192px;height:240px"></canvas>
+  </section>
+
+  <!-- Search -->
+  <div class="search-row">
+    <input class="pixel-input" id="search-input" placeholder="Soy @nick... (tu fila se resalta)">
+    <select class="pixel-select" id="filter-pack">
+      <option>TODOS LOS PACKS</option>
+      <option>PIZZA TOPPINGS</option>
+      <option>RPGs CLÁSICOS</option>
+      <option>COMIDA ASQUEROSA</option>
+      <option>FAMOSOS ESPAÑOLES</option>
+      <option>MEMES 2010-2020</option>
+    </select>
+    <button class="search-btn" id="copy-link">COPIAR LINK</button>
+  </div>
+  <p style="font-family:var(--font-body);font-size:18px;color:var(--c-ash);margin:-8px 0 var(--u3)">
+    Deep-link soportado: <code style="background:var(--c-void);padding:2px 6px;color:var(--c-paper);font-size:16px">/leaderboard?highlight=adri_42</code> resalta una fila automáticamente. Útil para que el streamer comparta el enlace de un viewer en chat.
+  </p>
+
+  <!-- Filter chips -->
+  <div class="filter-chips" id="filter-chips">
+    <div class="chip active" data-period="all">ALL TIME</div>
+    <div class="chip" data-period="month">ESTE MES</div>
+    <div class="chip" data-period="week">ESTA SEMANA</div>
+    <div class="chip" data-period="today">HOY</div>
+    <div class="chip" data-period="streak">RACHA ACTIVA</div>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium" id="podium"></div>
+
+  <!-- Table -->
+  <div class="lb-table">
+    <div class="lb-row head">
+      <span class="rk">#</span>
+      <span></span>
+      <span class="nick">NICK</span>
+      <span class="pts">PUNTOS</span>
+      <span class="stat">PARTIDAS</span>
+      <span class="stat">VICTORIAS</span>
+      <span class="pack">PACK FAV.</span>
+    </div>
+    <div id="lb-rows"></div>
+  </div>
+
+  <div class="lb-empty" id="lb-empty">
+    <p>NO HAY RESULTADOS PARA <strong id="empty-q">"…"</strong></p>
+    <p style="margin-top:var(--u);color:var(--c-stone)">¿Quizás escrito mal? Los nicks son case-insensitive.</p>
+  </div>
+
+  <div class="pagination">
+    <div class="pgbtn">◄ ANT</div>
+    <div class="pgbtn current">1</div>
+    <div class="pgbtn">2</div>
+    <div class="pgbtn">3</div>
+    <div class="pgbtn">4</div>
+    <div class="pgbtn">5</div>
+    <div class="pgbtn">SIG ►</div>
+  </div>
+
+</div>
+
+<script src="assets/sprite.js"></script>
+<script>
+  // === Fake leaderboard data ===
+  function makeNicks(n, seed) {
+    const a = ['pixel','bit','glitch','crt','retro','snek','ramen','byte','poke','ghost','neon','arcade','boss','noob','meta','ninja','dragon','cyber','dark','space','ace','combo','lvl','epic','tofu','wraith','bone','fuzz','blaze','toxic'];
+    const b = ['queen','warrior','god','kid','lord','master','baby','slayer','wizard','beast','reaper','fanatic','head','99','77','xx','22','7','xx99','x','jr','dad','mom','baz','art','fae','rex','sage'];
+    const out = []; let s = seed || 1;
+    for (let i = 0; i < n; i++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p1 = a[s % a.length];
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p2 = b[s % b.length];
+      out.push(p1 + '_' + p2);
+    }
+    return out;
+  }
+  const PACKS = ['PIZZA TOPPINGS','RPGs CLÁSICOS','COMIDA ASQUEROSA','FAMOSOS ESPAÑOLES','MEMES 2010-2020'];
+
+  const TOP = [
+    { nick: 'dragon_baz',    pts: 12480, games: 42, wins: 7, fav: 'PIZZA TOPPINGS' },
+    { nick: 'pixel_art',     pts:  9320, games: 38, wins: 5, fav: 'RPGs CLÁSICOS' },
+    { nick: 'crt_kid',       pts:  8710, games: 41, wins: 4, fav: 'ANIME 90s' },
+    { nick: 'snek_baby',     pts:  6940, games: 22, wins: 3, fav: 'BOSS BATTLE' },
+    { nick: 'dragon_baz_jr', pts:  5225, games: 19, wins: 3, fav: 'PIZZA TOPPINGS' },
+    { nick: 'bitwarrior',    pts:  4980, games: 33, wins: 2, fav: 'RPGs CLÁSICOS' },
+    { nick: 'ramen_god',     pts:  4720, games: 28, wins: 2, fav: 'COMIDA ASQUEROSA' },
+    { nick: 'glitch_fae',    pts:  4480, games: 25, wins: 2, fav: 'ANIME 90s' },
+    { nick: 'noob_xx',       pts:  4310, games: 30, wins: 2, fav: 'PIZZA TOPPINGS' },
+    { nick: 'meta_master',   pts:  4090, games: 27, wins: 2, fav: 'RPGs CLÁSICOS' },
+  ];
+
+  // pad rest of top 100
+  const extraNicks = makeNicks(90, 123456);
+  for (let i = 0; i < extraNicks.length; i++) {
+    TOP.push({
+      nick: extraNicks[i],
+      pts: Math.max(100, 4000 - i * 35 - (i % 7) * 8),
+      games: 5 + (i % 30),
+      wins: i % 5 === 0 ? 1 : 0,
+      fav: PACKS[i % PACKS.length]
+    });
+  }
+
+  // === Hero sprite ===
+  SpriteEngine.renderToCanvas(document.getElementById('hero-sprite'), 'dragon_baz', { pose: 'cheer', state: 'winner' });
+
+  // === Podium top 3 ===
+  const podium = document.getElementById('podium');
+  const top3 = [TOP[1], TOP[0], TOP[2]];        // silver, gold, bronze
+  const tiers = ['silver', 'gold', 'bronze'];
+  const ranks = ['2', '1', '3'];
+  top3.forEach((p, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'podium-cell ' + tiers[idx];
+    cell.innerHTML = `
+      <div class="rank">#${ranks[idx]}</div>
+      <canvas></canvas>
+      <div class="nick">@${p.nick}</div>
+      <div class="pts">${p.pts.toLocaleString('es')} pts</div>
+      <div class="stats">${p.wins} victorias · ${p.games} partidas</div>
+    `;
+    SpriteEngine.renderToCanvas(cell.querySelector('canvas'), p.nick, {
+      pose: idx === 1 ? 'cheer' : 'hands_hips',
+      state: idx === 1 ? 'winner' : 'voted'
+    });
+    podium.appendChild(cell);
+  });
+
+  // === Table rows ===
+  const rows = document.getElementById('lb-rows');
+  TOP.slice(0, 100).forEach((p, i) => {
+    const rank = i + 1;
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    if (rank === 1) row.classList.add('gold');
+    else if (rank === 2) row.classList.add('silver');
+    else if (rank === 3) row.classList.add('bronze');
+    if (p.nick === 'crt_kid') row.classList.add('me');   // demo: viewer-of-this-page marker
+    row.dataset.nick = p.nick.toLowerCase();
+    row.innerHTML = `
+      <span class="rk">${rank}</span>
+      <span class="av"><canvas></canvas></span>
+      <span class="nick">@${p.nick}</span>
+      <span class="pts">${p.pts.toLocaleString('es')}</span>
+      <span class="stat">${p.games}</span>
+      <span class="stat ${p.wins ? 'win' : ''}">${p.wins}</span>
+      <span class="pack">${p.fav}</span>
+    `;
+    SpriteEngine.renderToCanvas(row.querySelector('canvas'), p.nick, {});
+    rows.appendChild(row);
+  });
+
+  // === Search / highlight ===
+  const input = document.getElementById('search-input');
+  const empty = document.getElementById('lb-empty');
+  const emptyQ = document.getElementById('empty-q');
+
+  function applyHighlight(q) {
+    // remove all highlights
+    rows.querySelectorAll('.lb-row').forEach(r => r.classList.remove('me'));
+    if (!q) return null;
+    let found = null;
+    rows.querySelectorAll('.lb-row').forEach(r => {
+      if (r.dataset.nick === q) { r.classList.add('me'); found = r; }
+    });
+    return found;
+  }
+
+  // Highlight by URL param ?highlight=adri_42
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('highlight')) {
+    const q = params.get('highlight').toLowerCase().replace(/^@/, '');
+    input.value = '@' + q;
+    const row = applyHighlight(q);
+    if (row) row.scrollIntoView({ block: 'center' });
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase().replace(/^@/, '').trim();
+    applyHighlight(q);
+    let visible = 0;
+    // 'Soy @nick' mode: don't filter rows out — just highlight. Show all.
+    rows.querySelectorAll('.lb-row').forEach(r => { r.style.display = ''; visible++; });
+    if (q && !rows.querySelector('.me')) {
+      empty.classList.add('show');
+      emptyQ.textContent = `"${q}"`;
+    } else {
+      empty.classList.remove('show');
+    }
+  });
+
+  // copy link button
+  document.getElementById('copy-link').addEventListener('click', () => {
+    const q = input.value.toLowerCase().replace(/^@/, '').trim();
+    if (!q) { alert('Escribe un nick primero'); return; }
+    const url = `/leaderboard?highlight=${encodeURIComponent(q)}`;
+    if (navigator.clipboard) navigator.clipboard.writeText(url);
+    document.getElementById('copy-link').textContent = '✓ COPIADO';
+    setTimeout(() => { document.getElementById('copy-link').textContent = 'COPIAR LINK'; }, 1500);
+  });
+
+  // chip switching (visual only here)
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

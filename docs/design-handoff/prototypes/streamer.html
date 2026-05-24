@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Panel del streamer</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body {
+    padding: 0; min-height: 100vh;
+    display: flex; flex-direction: column;
+    background: var(--c-void);
+  }
+
+  .nav {
+    background: var(--c-night); padding: var(--u2) var(--u3);
+    display: flex; gap: var(--u2); align-items: center;
+    border-bottom: var(--border-1) solid var(--c-stone);
+    flex-wrap: wrap;
+  }
+  .nav h1 { font-size: var(--fs-md); color: var(--c-flame); margin-right: auto; }
+  .nav .auth-tag {
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-ash);
+    padding: 2px 6px; background: var(--c-dusk);
+    border: 1px solid var(--c-stone); margin-right: var(--u);
+  }
+  .nav .auth-tag .lock { color: var(--c-warn); }
+  .nav a {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    border: 2px solid var(--c-stone); color: var(--c-ash);
+  }
+  .nav a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+
+  /* === Top status bar === */
+  .status-bar {
+    background: var(--c-dusk);
+    border-bottom: 4px solid var(--c-flame);
+    padding: var(--u2) var(--u3);
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--u3);
+    font-family: var(--font-title); font-size: 10px;
+  }
+  .status-cell { display: flex; flex-direction: column; gap: 4px; }
+  .status-cell .lbl { color: var(--c-ash); letter-spacing: 1px; }
+  .status-cell .val { color: var(--c-paper); font-size: 14px; }
+  .status-cell .val.live { color: var(--c-success); }
+  .status-cell .val.live::before {
+    content: '●'; color: var(--c-success);
+    animation: pixel-blink 1s step-end infinite;
+    margin-right: 6px;
+  }
+  .status-cell .val.warn { color: var(--c-warn); }
+
+  .phase-tabs {
+    display: flex; gap: 2px;
+    background: var(--c-night); padding: var(--u);
+    border-bottom: var(--border-1) solid var(--c-stone);
+    overflow-x: auto;
+  }
+  .phase-tab {
+    font-family: var(--font-title); font-size: 10px;
+    padding: var(--u) var(--u2);
+    background: var(--c-dusk); color: var(--c-ash);
+    border: 2px solid var(--c-stone); cursor: pointer;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: var(--u);
+  }
+  .phase-tab .step {
+    font-size: 8px; color: var(--c-stone); padding: 2px 4px;
+    background: var(--c-void);
+  }
+  .phase-tab.active {
+    background: var(--c-flame); color: var(--c-void); border-color: var(--c-flame);
+  }
+  .phase-tab.active .step { background: var(--c-void); color: var(--c-flame); }
+
+  /* === Main layout: preview + controls === */
+  .panel-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: var(--u3);
+    padding: var(--u3);
+    min-height: 0;
+  }
+
+  /* === Preview + chat + activity === */
+  .preview-section {
+    display: flex; flex-direction: column; gap: var(--u2);
+    min-width: 0;
+  }
+  .preview-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-title); font-size: 10px; color: var(--c-ash);
+    letter-spacing: 1px;
+  }
+  .preview-label .live-tag {
+    color: var(--c-success); background: var(--c-void);
+    padding: 2px 6px; border: 2px solid var(--c-success);
+  }
+  .preview-frame {
+    border: var(--border-2) solid var(--c-paper);
+    background: var(--c-night);
+    aspect-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-pixel-lg);
+  }
+  .mini {
+    width: 100%; height: 100%;
+    position: relative;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .mini-topbar {
+    background: var(--c-dusk); border-bottom: 3px solid var(--c-flame);
+    padding: 6px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-title); font-size: 9px;
+    color: var(--c-paper); gap: var(--u);
+  }
+  .mini-topbar .qq { color: var(--c-flame); }
+  .mini-content {
+    flex: 1; padding: var(--u2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    color: var(--c-bone);
+  }
+  .mini-content h2 {
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-flame); margin-bottom: var(--u);
+    text-shadow: 3px 3px 0 var(--c-void);
+  }
+  .mini-content p { font-family: var(--font-body); font-size: 20px; }
+  .mini-bottombar {
+    background: var(--c-dusk); border-top: 3px solid var(--c-flame);
+    padding: 4px 12px;
+    font-family: var(--font-title); font-size: 9px;
+    color: var(--c-bone); display: flex; gap: var(--u2);
+  }
+
+  .sub-panels {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--u2);
+  }
+  .sub-panel {
+    background: var(--c-dusk);
+    border: var(--border-1) solid var(--c-stone);
+    padding: var(--u2);
+  }
+  .sub-panel h3 {
+    font-family: var(--font-title); font-size: 10px; color: var(--c-flame);
+    margin-bottom: var(--u); letter-spacing: 1px;
+    display: flex; justify-content: space-between;
+  }
+  .sub-panel h3 .count { color: var(--c-ash); font-size: 8px; }
+  .chat-log {
+    height: 240px; overflow: hidden;
+    font-family: var(--font-body); font-size: 18px;
+    line-height: 1.2;
+    color: var(--c-bone);
+    display: flex; flex-direction: column-reverse;
+    gap: 2px;
+  }
+  .chat-log .msg .nick { color: var(--c-flame); margin-right: 6px; font-family: var(--font-title); font-size: 9px; }
+  .chat-log .msg.vote-l .body { color: var(--c-danger); font-weight: bold; }
+  .chat-log .msg.vote-r .body { color: var(--c-success); font-weight: bold; }
+  .chat-log .msg.sys { color: var(--c-warn); font-family: var(--font-title); font-size: 9px; }
+  .chat-log .msg.sys .body::before { content: '>> '; color: var(--c-warn); }
+
+  .activity-row {
+    display: flex; justify-content: space-between;
+    padding: var(--u-half) 0;
+    border-bottom: 1px dashed var(--c-stone);
+    font-family: var(--font-body); font-size: 18px;
+  }
+  .activity-row:last-child { border-bottom: 0; }
+  .activity-row .who { color: var(--c-bone); }
+  .activity-row .what { color: var(--c-ash); font-size: 16px; }
+  .activity-row .time { color: var(--c-stone); font-family: var(--font-title); font-size: 8px; }
+
+  /* === Right: controls === */
+  .controls-section {
+    display: flex; flex-direction: column; gap: var(--u2);
+    min-width: 0;
+  }
+  .controls-card {
+    background: var(--c-dusk);
+    border: var(--border-2) solid var(--c-paper);
+    padding: var(--u2);
+    box-shadow: var(--shadow-pixel-lg);
+  }
+  .controls-card .ctitle {
+    font-family: var(--font-title); font-size: 12px;
+    color: var(--c-paper); margin-bottom: var(--u);
+    padding-bottom: var(--u-half);
+    border-bottom: var(--border-1) solid var(--c-stone);
+    letter-spacing: 1px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .controls-card .ctitle .badge {
+    font-size: 8px; padding: 2px 4px; background: var(--c-flame); color: var(--c-void);
+  }
+  .controls-card .ctitle .badge.warn { background: var(--c-warn); }
+  .controls-card .ctitle .badge.success { background: var(--c-success); }
+  .controls-card .ctitle .badge.gold { background: var(--c-gold); }
+  .controls-card .subhint {
+    font-family: var(--font-body); font-size: 18px; color: var(--c-ash);
+    margin-bottom: var(--u);
+  }
+  .controls-card .subhint code {
+    background: var(--c-void); color: var(--c-paper); padding: 1px 4px; font-size: 14px;
+  }
+
+  /* button system */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--u);
+    font-family: var(--font-title); font-size: 11px;
+    padding: var(--u2);
+    background: var(--c-stone); color: var(--c-paper);
+    border: 3px solid var(--c-paper);
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--c-void);
+    width: 100%;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .btn:hover { background: var(--c-flame); color: var(--c-void); }
+  .btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--c-void); }
+  .btn.primary { background: var(--c-flame); color: var(--c-void); }
+  .btn.primary:hover { background: var(--c-paper); }
+  .btn.secondary { background: var(--c-ice); color: var(--c-void); }
+  .btn.success { background: var(--c-success); color: var(--c-void); }
+  .btn.warn { background: var(--c-warn); color: var(--c-void); }
+  .btn.danger { background: var(--c-danger); color: var(--c-paper); }
+  .btn.ghost { background: var(--c-dusk); color: var(--c-bone); border-color: var(--c-stone); box-shadow: none; }
+  .btn.tiny { font-size: 9px; padding: var(--u); }
+  .btn.huge { font-size: 16px; padding: var(--u3); }
+  .btn[disabled] {
+    opacity: 0.4; cursor: not-allowed;
+    background: var(--c-stone); color: var(--c-ash);
+    box-shadow: 2px 2px 0 var(--c-void);
+  }
+  .btn[disabled]:hover { background: var(--c-stone); color: var(--c-ash); }
+
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--u); }
+  .btn-row.tri { grid-template-columns: 1fr 1fr 1fr; }
+  .btn-col { display: flex; flex-direction: column; gap: var(--u); margin-top: var(--u); }
+
+  /* huge swipe buttons (card phase) */
+  .swipe-pair {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--u2);
+    margin: var(--u) 0;
+  }
+  .swipe-pair .swipe-btn {
+    display: flex; flex-direction: column; align-items: center; gap: var(--u);
+    padding: var(--u3) var(--u);
+    border: 4px solid;
+    background: var(--c-void);
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--c-stone);
+  }
+  .swipe-pair .swipe-btn .arrow {
+    font-family: var(--font-title); font-size: 56px; line-height: 1;
+  }
+  .swipe-pair .swipe-btn .lbl {
+    font-family: var(--font-title); font-size: 14px;
+  }
+  .swipe-pair .swipe-btn.left  { border-color: var(--c-danger); color: var(--c-danger); }
+  .swipe-pair .swipe-btn.right { border-color: var(--c-success); color: var(--c-success); }
+  .swipe-pair .swipe-btn.left.voted, .swipe-pair .swipe-btn.left:hover {
+    background: var(--c-danger); color: var(--c-paper);
+  }
+  .swipe-pair .swipe-btn.right.voted, .swipe-pair .swipe-btn.right:hover {
+    background: var(--c-success); color: var(--c-void);
+  }
+
+  /* timer */
+  .timer-display {
+    font-family: var(--font-title); font-size: 36px;
+    color: var(--c-warn); text-align: center;
+    padding: var(--u) var(--u2);
+    background: var(--c-void);
+    border: 4px solid var(--c-warn);
+    margin-bottom: var(--u);
+  }
+  .timer-display .label { display: block; font-size: 10px; color: var(--c-ash); margin-bottom: var(--u-half); }
+  .timer-display .num { animation: pixel-blink 1s step-end infinite; }
+  .timer-display.urgent { color: var(--c-danger); border-color: var(--c-danger); }
+
+  /* checkbox / select / input */
+  .pixel-check {
+    display: flex; gap: var(--u); align-items: center;
+    font-family: var(--font-body); font-size: 18px; color: var(--c-bone);
+    cursor: pointer; padding: 4px 0;
+  }
+  .pixel-check .box {
+    width: 18px; height: 18px;
+    background: var(--c-void); border: 2px solid var(--c-bone);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .pixel-check input { display: none; }
+  .pixel-check input:checked + .box::after {
+    content: ''; width: 8px; height: 8px; background: var(--c-flame);
+  }
+  .pixel-select {
+    background: var(--c-void); color: var(--c-paper);
+    border: 2px solid var(--c-bone); padding: var(--u);
+    font-family: var(--font-title); font-size: 10px;
+    width: 100%; cursor: pointer;
+  }
+  .pixel-input {
+    background: var(--c-void); color: var(--c-paper);
+    border: 2px solid var(--c-bone); padding: var(--u);
+    font-family: var(--font-body); font-size: 20px;
+    width: 100%;
+  }
+
+  /* === Player list (lobby) === */
+  .player-list {
+    height: 220px; overflow: auto;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+  }
+  .player-list .player {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 4px; background: var(--c-night);
+    border: 1px solid var(--c-stone);
+    position: relative;
+  }
+  .player-list .player canvas { width: 36px; height: 45px; }
+  .player-list .player .nm {
+    font-family: var(--font-title); font-size: 6px; color: var(--c-bone);
+    text-align: center; word-break: break-all; line-height: 1.1;
+    margin-top: 2px;
+  }
+  .player-list .player .kick {
+    position: absolute; top: 2px; right: 2px;
+    width: 14px; height: 14px;
+    background: var(--c-danger); color: var(--c-paper);
+    font-family: var(--font-title); font-size: 8px;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .player-list .player:hover .kick { display: flex; }
+  .player-list .player.banned {
+    opacity: 0.4;
+    background: var(--c-danger-dk);
+  }
+
+  /* === Live tally (card phase) === */
+  .live-tally {
+    display: flex; flex-direction: column; gap: var(--u);
+    margin-bottom: var(--u);
+  }
+  .live-tally .row {
+    display: grid; grid-template-columns: 60px 1fr 60px; gap: var(--u);
+    align-items: center;
+    font-family: var(--font-title); font-size: 12px;
+  }
+  .live-tally .label.l { color: var(--c-danger); }
+  .live-tally .label.r { color: var(--c-success); }
+  .live-tally .bar {
+    height: 16px; background: var(--c-void);
+    border: 2px solid var(--c-stone); position: relative;
+  }
+  .live-tally .bar .fill { height: 100%; }
+  .live-tally .row.l .fill { background: var(--c-danger); }
+  .live-tally .row.r .fill { background: var(--c-success); }
+  .live-tally .num { text-align: right; color: var(--c-paper); }
+
+  /* === Criba grid (operator) === */
+  .criba-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
+    margin-bottom: var(--u);
+  }
+  .criba-grid .col-mini {
+    background: var(--c-night);
+    border: 2px solid var(--c-stone);
+    padding: 4px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .criba-grid .col-mini:hover { border-color: var(--c-flame); }
+  .criba-grid .col-mini .tier {
+    font-family: var(--font-title); font-size: 12px;
+    color: var(--c-paper);
+  }
+  .criba-grid .col-mini .ct {
+    font-family: var(--font-title); font-size: 9px;
+    color: var(--c-gold);
+    margin-top: 2px;
+  }
+  .criba-grid .col-mini.eliminated {
+    background: var(--c-danger-dk);
+    border-color: var(--c-danger);
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .criba-grid .col-mini.eliminated .tier { color: var(--c-paper); }
+  .criba-grid .col-mini.eliminated::after {
+    content: '×'; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-paper);
+  }
+
+  .bonus-mini {
+    background: var(--c-void);
+    border: 3px solid var(--c-gold);
+    padding: var(--u);
+    margin-bottom: var(--u);
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--u);
+    text-align: center;
+  }
+  .bonus-mini .lbl {
+    font-family: var(--font-title); font-size: 8px; color: var(--c-ash);
+    margin-bottom: 2px; letter-spacing: 1px;
+  }
+  .bonus-mini .val {
+    font-family: var(--font-title); font-size: 18px;
+    color: var(--c-success);
+  }
+  .bonus-mini .val.gold { color: var(--c-gold); }
+
+  /* phase show */
+  .phase-controls { display: none; }
+  .phase-controls.active { display: contents; }
+
+  @media (max-width: 1100px) {
+    .panel-main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body data-screen-label="Streamer Panel">
+
+<header class="nav">
+  <h1>PANEL DEL STREAMER</h1>
+  <span class="auth-tag"><span class="lock">🔒</span> HTTP BASIC · /streamer</span>
+  <a href="index.html">← Inicio</a>
+  <a href="design-system.html">Sistema</a>
+  <a href="overlay.html">Overlay</a>
+  <a href="leaderboard.html">Leaderboard</a>
+  <a href="packs.html">Packs</a>
+</header>
+
+<div class="status-bar">
+  <div class="status-cell">
+    <div class="lbl">SIGNALR · TWITCH IRC</div>
+    <div class="val live">EN VIVO</div>
+  </div>
+  <div class="status-cell">
+    <div class="lbl">PACK ACTIVO</div>
+    <div class="val" id="active-pack">RPGs CLÁSICOS</div>
+  </div>
+  <div class="status-cell">
+    <div class="lbl">PREGUNTA DEL PACK</div>
+    <div class="val" style="font-size:12px" id="active-question">¿LO HAS JUGADO ENTERO?</div>
+  </div>
+  <div class="status-cell">
+    <div class="lbl">FASE · PROGRESO</div>
+    <div class="val" id="active-progress">CARTA 3 / 10</div>
+  </div>
+  <div class="status-cell">
+    <div class="lbl">LOBBY · ESPECTADORES</div>
+    <div class="val">60 / 60 · 1247</div>
+  </div>
+</div>
+
+<div class="phase-tabs" id="phase-tabs">
+  <div class="phase-tab" data-phase="idle">       <span class="step">0</span>IDLE</div>
+  <div class="phase-tab" data-phase="lobby">      <span class="step">1</span>LOBBY</div>
+  <div class="phase-tab" data-phase="card">       <span class="step">2</span>CARD (1..10)</div>
+  <div class="phase-tab" data-phase="card_reveal"><span class="step">3</span>REVEAL</div>
+  <div class="phase-tab" data-phase="criba">      <span class="step">4</span>CRIBA</div>
+  <div class="phase-tab" data-phase="victory">    <span class="step">5</span>VICTORY</div>
+</div>
+
+<main class="panel-main">
+  <!-- LEFT -->
+  <div class="preview-section">
+    <div class="preview-label">
+      <span>PREVIEW · LO QUE VE LA AUDIENCIA</span>
+      <span class="live-tag">● /overlay</span>
+    </div>
+    <div class="preview-frame">
+      <div class="mini">
+        <div class="mini-topbar">
+          <span>⚔ RPGs CLÁSICOS</span>
+          <span class="qq" id="mini-q">¿LO HAS JUGADO ENTERO?</span>
+          <span id="mini-progress">CARTA 3 / 10</span>
+        </div>
+        <div class="mini-content" id="mini-content">
+          <h2 id="mini-h2">ANCHOA · 0:07</h2>
+          <p id="mini-p">!izq 94 · !der 128 · streamer ya decidió</p>
+        </div>
+        <div class="mini-bottombar">
+          <span>VOTA:</span>
+          <span style="color:var(--c-danger)">!izq</span>
+          <span style="color:var(--c-success)">!der</span>
+          <span style="margin-left:auto;color:var(--c-ash)">aliases !l/!r · !1/!2 · !si/!no</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-panels">
+      <div class="sub-panel">
+        <h3>CHAT TWITCH · IRC <span class="count">parsed</span></h3>
+        <div class="chat-log" id="chat-log"></div>
+      </div>
+      <div class="sub-panel">
+        <h3>EVENTOS DE PARTIDA <span class="count">últimos 10</span></h3>
+        <div class="activity-log" id="activity-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: controls -->
+  <div class="controls-section">
+
+    <!-- IDLE -->
+    <div class="phase-controls" data-phase="idle">
+      <div class="controls-card">
+        <div class="ctitle">PRE‑LOBBY <span class="badge">FASE 0</span></div>
+        <p class="subhint">El stream está en pausa. Elige un pack y abre el lobby.</p>
+
+        <label style="display:block;margin-bottom:var(--u);font-family:var(--font-title);font-size:10px;color:var(--c-ash)">PACK PARA ESTA PARTIDA</label>
+        <select class="pixel-select" style="margin-bottom:var(--u2)">
+          <option selected>RPGs CLÁSICOS · 24 cartas · ¿lo has jugado entero?</option>
+          <option>PIZZA TOPPINGS · 15 cartas · ¿te lo comerías?</option>
+          <option>COMIDA ASQUEROSA · 12 cartas · ¿lo probarías?</option>
+          <option>FAMOSOS ESPAÑOLES · 30 cartas · ¿te suena?</option>
+          <option>MEMES 2010-2020 · 40 cartas · ¿lo reconoces?</option>
+        </select>
+
+        <p class="subhint">El pack define la <strong style="color:var(--c-flame)">pregunta</strong> que se enseña en el overlay y las 10 cartas que se barajan.</p>
+
+        <div class="btn-col" style="margin-top:var(--u2)">
+          <button class="btn primary huge">▶ ABRIR LOBBY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="phase-controls active" data-phase="lobby">
+      <div class="controls-card">
+        <div class="ctitle">LOBBY ABIERTO <span class="badge" id="lobby-badge">23 / 60</span></div>
+        <p class="subhint">Mínimo <code>10</code> apuntados para arrancar. Hard cap <code>60</code>. Espectador 61+ recibe reply manual.</p>
+
+        <div class="timer-display">
+          <span class="label">CIERRE AUTO EN</span>
+          <span class="num">0:48</span>
+        </div>
+
+        <div class="btn-col">
+          <button class="btn primary" id="start-btn">▶ EMPEZAR PARTIDA</button>
+          <p style="font-family:var(--font-body);font-size:14px;color:var(--c-success);text-align:center;margin:0">✓ 13 jugadores por encima del mínimo</p>
+          <div class="btn-row tri">
+            <button class="btn ghost tiny">+30s</button>
+            <button class="btn ghost tiny">VACIAR</button>
+            <button class="btn ghost tiny">CERRAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="controls-card">
+        <div class="ctitle">APUNTADOS <span class="badge gold" id="counter-badge">23</span></div>
+        <p class="subhint">Hover un avatar para ver el botón "kick" (banea + saca del lobby).</p>
+        <div class="player-list" id="player-list"></div>
+      </div>
+    </div>
+
+    <!-- CARD -->
+    <div class="phase-controls" data-phase="card">
+      <div class="controls-card">
+        <div class="ctitle">CARTA 3 / 10 · <span style="color:var(--c-flame)">CHRONO TRIGGER</span> <span class="badge warn">VOTANDO</span></div>
+
+        <div class="timer-display urgent">
+          <span class="label">TIMER MÁX. 10s</span>
+          <span class="num">0:07</span>
+        </div>
+
+        <p class="subhint" style="color:var(--c-paper);font-family:var(--font-title);font-size:10px;text-align:center;margin-top:var(--u)">TU VOTO (¿lo has jugado entero?):</p>
+        <div class="swipe-pair">
+          <button class="swipe-btn left" id="vote-l">
+            <div class="arrow">←</div>
+            <div class="lbl">IZQUIERDA</div>
+            <div class="lbl" style="font-size:9px;color:inherit">NO</div>
+          </button>
+          <button class="swipe-btn right voted" id="vote-r">
+            <div class="arrow">→</div>
+            <div class="lbl">DERECHA</div>
+            <div class="lbl" style="font-size:9px;color:inherit">SÍ ✓</div>
+          </button>
+        </div>
+        <p style="font-family:var(--font-body);font-size:18px;color:var(--c-success);text-align:center;margin:var(--u) 0">Has elegido <strong style="color:var(--c-paper);font-family:var(--font-title);font-size:12px">DERECHA</strong>. El icono "puede cerrar" se enseña ya en el overlay.</p>
+
+        <div style="border-top:2px dashed var(--c-stone);padding-top:var(--u);margin-top:var(--u)">
+          <p class="subhint" style="font-family:var(--font-title);font-size:10px;color:var(--c-ash);margin-bottom:var(--u-half)">VOTOS DEL CHAT EN DIRECTO</p>
+          <div class="live-tally">
+            <div class="row l"><span class="label l">!izq</span><div class="bar"><div class="fill" style="width:42%"></div></div><span class="num">94</span></div>
+            <div class="row r"><span class="label r">!der</span><div class="bar"><div class="fill" style="width:58%"></div></div><span class="num">128</span></div>
+          </div>
+        </div>
+
+        <div class="btn-col">
+          <button class="btn warn">⏹ CERRAR VOTACIÓN AHORA</button>
+        </div>
+      </div>
+      <div class="controls-card" style="border-color:var(--c-danger)">
+        <div class="ctitle" style="color:var(--c-danger)">CARTA ROTA <span class="badge" style="background:var(--c-danger);color:var(--c-paper)">EMERGENCIA</span></div>
+        <p class="subhint">Usa esto sólo si la imagen no carga o el contenido es claramente defectuoso. La carta se anula, nadie suma puntos por ella, se pasa a la siguiente.</p>
+        <button class="btn danger">⛔ CARTA ROTA — SALTAR</button>
+      </div>
+    </div>
+
+    <!-- CARD REVEAL -->
+    <div class="phase-controls" data-phase="card_reveal">
+      <div class="controls-card">
+        <div class="ctitle">MINI‑REVELADO <span class="badge success">2‑3s</span></div>
+        <p class="subhint">El mini-revelado se ha enseñado al chat. <strong style="color:var(--c-success);font-family:var(--font-title);font-size:10px">94 / 222 acertaron</strong>. Cuando quieras comentar, termina y pasa a la siguiente.</p>
+
+        <div style="background:var(--c-void);padding:var(--u2);border:3px solid var(--c-success);margin-bottom:var(--u2);text-align:center">
+          <div style="font-family:var(--font-title);font-size:10px;color:var(--c-ash);margin-bottom:var(--u-half)">TU VOTO</div>
+          <div style="font-family:var(--font-title);font-size:24px;color:var(--c-success)">→ DERECHA · SÍ</div>
+        </div>
+
+        <div class="btn-col">
+          <button class="btn primary huge">SIGUIENTE CARTA →</button>
+          <p style="font-family:var(--font-body);font-size:16px;color:var(--c-ash);text-align:center;margin:0">Sin timer en este hueco — controla el ritmo.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRIBA -->
+    <div class="phase-controls" data-phase="criba">
+      <div class="controls-card">
+        <div class="ctitle">CRIBA · CLIC LIBRE <span class="badge" style="background:var(--c-danger);color:var(--c-paper)">SIN UNDO</span></div>
+        <p class="subhint">Clica cualquier tier para eliminarlo. Sin orden estricto, sin undo. <strong style="color:var(--c-danger);font-family:var(--font-title);font-size:9px">CADA CLIC ES PERMANENTE.</strong></p>
+
+        <div class="criba-grid" id="criba-grid"></div>
+
+        <div class="bonus-mini">
+          <div>
+            <div class="lbl">SUPERVIVIENTES</div>
+            <div class="val" id="surv-val">14</div>
+          </div>
+          <div>
+            <div class="lbl">BONUS / SUPERVIV.</div>
+            <div class="val gold" id="bonus-val">+7 pts</div>
+          </div>
+        </div>
+
+        <p style="font-family:var(--font-body);font-size:16px;color:var(--c-bone);text-align:center;margin:var(--u) 0">
+          Fórmula: <code style="background:var(--c-void);padding:1px 4px;color:var(--c-paper);font-size:14px">floor(100 / 14) = 7</code>
+        </p>
+
+        <div class="btn-col">
+          <button class="btn success">✓ FINALIZAR CRIBA</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VICTORY -->
+    <div class="phase-controls" data-phase="victory">
+      <div class="controls-card">
+        <div class="ctitle">PARTIDA TERMINADA <span class="badge gold">FIN</span></div>
+        <p class="subhint"><strong style="color:var(--c-gold);font-family:var(--font-title);font-size:10px">14 ganadores</strong>. UPSERT al leaderboard ya ejecutado. Tabla visible en overlay 15-20s.</p>
+
+        <div style="background:var(--c-void);padding:var(--u2);border:3px solid var(--c-gold);margin-bottom:var(--u2)">
+          <div style="font-family:var(--font-title);font-size:10px;color:var(--c-ash);margin-bottom:var(--u-half)">DELTAS DE ESTA PARTIDA</div>
+          <div style="font-family:var(--font-body);font-size:18px;color:var(--c-bone);line-height:1.5">
+            14 viewers ganaron +7 bonus<br>
+            46 viewers eliminados (sólo aciertos)<br>
+            Mayor acierto: 10/10 (2 viewers)<br>
+            Pack: RPGs CLÁSICOS · Carta más controvertida: SUIKODEN II (51/49)
+          </div>
+        </div>
+
+        <div class="btn-col">
+          <button class="btn primary">▶ ABRIR NUEVO LOBBY</button>
+          <p style="font-family:var(--font-body);font-size:14px;color:var(--c-ash);text-align:center;margin:0">Conserva el pack o pulsa para cambiarlo.</p>
+          <button class="btn secondary">▶ NUEVO LOBBY · CAMBIAR PACK</button>
+          <button class="btn ghost tiny">📋 COPIAR RESUMEN AL CHAT</button>
+          <button class="btn ghost">CERRAR SESIÓN · VOLVER A IDLE</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="assets/sprite.js"></script>
+<script>
+  function makeNicks(n, seed) {
+    const a = ['pixel','bit','glitch','crt','retro','snek','ramen','byte','poke','ghost','neon','arcade','boss','noob','meta','ninja','dragon','cyber','dark','space','ace','combo','lvl','epic','tofu','wraith','bone','fuzz','blaze','toxic'];
+    const b = ['queen','warrior','god','kid','lord','master','baby','slayer','wizard','beast','reaper','jr','sr','fanatic','head','head42','99','77','xx','22','7'];
+    const out = []; let s = seed || 1;
+    for (let i = 0; i < n; i++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p1 = a[s % a.length];
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p2 = b[s % b.length];
+      out.push(p1 + '_' + p2);
+    }
+    return out;
+  }
+
+  const TIER_DISTRIBUTION = [1, 1, 3, 5, 7, 12, 11, 9, 6, 3, 2]; // 0..10
+  let ELIMINATED = new Set([0, 1, 2, 3, 4, 6, 9]);
+
+  function recalcCriba() {
+    let surv = 0;
+    for (let t = 0; t <= 10; t++) {
+      if (!ELIMINATED.has(t)) surv += TIER_DISTRIBUTION[t];
+    }
+    const bonus = Math.floor(100 / Math.max(1, surv));
+    document.getElementById('surv-val').textContent = surv;
+    document.getElementById('bonus-val').textContent = '+' + bonus + ' pts';
+  }
+
+  function renderCribaGrid() {
+    const host = document.getElementById('criba-grid');
+    if (!host) return;
+    host.innerHTML = '';
+    for (let t = 0; t <= 10; t++) {
+      const c = document.createElement('div');
+      c.className = 'col-mini' + (ELIMINATED.has(t) ? ' eliminated' : '');
+      c.innerHTML = `<div class="tier">${t}</div><div class="ct">${TIER_DISTRIBUTION[t]}</div>`;
+      c.addEventListener('click', () => {
+        if (ELIMINATED.has(t)) return;
+        ELIMINATED.add(t);
+        renderCribaGrid();
+        recalcCriba();
+      });
+      host.appendChild(c);
+    }
+    recalcCriba();
+  }
+
+  // === Phase switching ===
+  document.querySelectorAll('.phase-tab').forEach(t => {
+    t.addEventListener('click', () => setPhase(t.dataset.phase));
+  });
+
+  const MINI_COPY = {
+    idle:        { progress: 'EN PREPARACIÓN', h2: 'STAND BY', p: 'Esperando a que el streamer abra un lobby.' },
+    lobby:       { progress: 'PRE‑LOBBY',       h2: 'LOBBY · 23 / 60', p: '!join para entrar · cierre en 0:48' },
+    card:        { progress: 'CARTA 3 / 10',    h2: 'CHRONO TRIGGER · 0:07',  p: '!izq 128 · !der 94 · streamer decidió' },
+    card_reveal: { progress: 'CARTA 3 / 10',    h2: '→ DER · SÍ',     p: '128 / 222 acertaron (57%)' },
+    criba:       { progress: 'CRIBA',           h2: '¡CRIBA EN CURSO!', p: '14 supervivientes · +7 pts cada uno' },
+    victory:     { progress: 'PARTIDA · 10/10', h2: '¡14 GANADORES!', p: 'Tabla visible 15-20s' },
+  };
+
+  function setPhase(id) {
+    document.querySelectorAll('.phase-controls').forEach(c => c.classList.toggle('active', c.dataset.phase === id));
+    document.querySelectorAll('.phase-tab').forEach(t => t.classList.toggle('active', t.dataset.phase === id));
+    const c = MINI_COPY[id];
+    document.getElementById('mini-progress').textContent = c.progress;
+    document.getElementById('mini-h2').textContent = c.h2;
+    document.getElementById('mini-p').textContent = c.p;
+    document.getElementById('active-progress').textContent = c.progress;
+    if (id === 'lobby') renderPlayerList(document.getElementById('player-list'), 23, 7777);
+    if (id === 'criba') renderCribaGrid();
+  }
+
+  function renderPlayerList(host, n, seed) {
+    host.innerHTML = '';
+    const nicks = makeNicks(n, seed);
+    nicks.forEach(name => {
+      const p = document.createElement('div');
+      p.className = 'player';
+      const cv = document.createElement('canvas');
+      SpriteEngine.renderToCanvas(cv, name, {});
+      p.appendChild(cv);
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = '@' + name.slice(0, 12);
+      p.appendChild(nm);
+      const k = document.createElement('div'); k.className = 'kick'; k.textContent = '×';
+      k.title = 'Banear @' + name;
+      p.appendChild(k);
+      host.appendChild(p);
+    });
+  }
+
+  // === Chat log fake feed (Twitch IRC parsed) ===
+  const chatNicks = makeNicks(60, 444);
+  const chatBodies = [
+    { vote:'r', text:'!der lo jugué dos veces' },
+    { vote:'l', text:'!izq nunca tuve SNES' },
+    { vote:'r', text:'!si terminado al 100%' },
+    { vote:'l', text:'!no lo empecé y me ralle' },
+    { vote:'r', text:'!der obvio' },
+    { text:'CHRONO TRIGGER GOAT' },
+    { vote:'r', text:'!2' },
+    { vote:'l', text:'!1' },
+    { sys:true, text:'streamer ha decidido — puede cerrar votación' },
+    { text:'!leaderboard' },
+    { vote:'r', text:'!der' },
+    { vote:'r', text:'!si tres finales distintos' },
+    { vote:'l', text:'!l' },
+    { sys:true, text:'@bot_account ignorado · ya votó esta carta' },
+    { vote:'r', text:'!der' },
+    { text:'el streamer tarda eh' },
+    { sys:true, text:'cierre automático en 7s' },
+    { vote:'l', text:'!izq' },
+    { vote:'r', text:'!r' },
+    { vote:'r', text:'!der' },
+  ];
+  const chatLog = document.getElementById('chat-log');
+  chatBodies.slice().reverse().forEach((b, i) => {
+    const m = document.createElement('div');
+    m.className = 'msg' + (b.vote ? ' vote-'+b.vote : '') + (b.sys ? ' sys' : '');
+    if (b.sys) {
+      m.innerHTML = `<span class="body">${b.text}</span>`;
+    } else {
+      const nick = chatNicks[i % chatNicks.length];
+      m.innerHTML = `<span class="nick">@${nick.slice(0,12)}:</span><span class="body">${b.text}</span>`;
+    }
+    chatLog.appendChild(m);
+  });
+
+  // === Activity log ===
+  const activity = [
+    { who: '@dragon_baz',  what: 'votó !der',         time: '0:02' },
+    { who: '@pixel_art',   what: 'votó !der',         time: '0:01' },
+    { who: '@trash_panda', what: 'salió del lobby',   time: '0:01' },
+    { who: '@noob_baby',   what: 'votó !izq',         time: '0:00' },
+    { who: '@boss_99',     what: 'entró al lobby',    time: '0:00' },
+    { who: '@retro_head',  what: 'votó !der',         time: '0:00' },
+    { who: 'STREAMER',     what: 'votó · puede cerrar', time: '0:00' },
+    { who: 'STREAMER',     what: 'abrió carta 3 · CHRONO TRIGGER', time: '0:01' },
+  ];
+  const aLog = document.getElementById('activity-log');
+  activity.forEach(a => {
+    const r = document.createElement('div'); r.className = 'activity-row';
+    r.innerHTML = `<span class="who">${a.who}</span><span class="what">${a.what}</span><span class="time">−${a.time}</span>`;
+    aLog.appendChild(r);
+  });
+
+  setPhase('lobby');
+</script>
+
+</body>
+</html>

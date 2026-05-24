@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Sistema de diseño</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: var(--u4) var(--u3) var(--u8); max-width: 1280px; margin: 0 auto; }
+
+  .nav {
+    display: flex; gap: var(--u2); flex-wrap: wrap;
+    margin-bottom: var(--u4); padding-bottom: var(--u2);
+    border-bottom: var(--border-1) dashed var(--c-stone);
+  }
+  .nav a {
+    font-family: var(--font-title); font-size: var(--fs-xs);
+    padding: var(--u-half) var(--u);
+    border: var(--border-1) solid var(--c-stone);
+    color: var(--c-ash);
+  }
+  .nav a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+  .nav a.current { color: var(--c-paper); border-color: var(--c-flame); background: transparent; }
+
+  .hero { margin-bottom: var(--u6); }
+  .hero h1 {
+    font-size: 56px; line-height: 1; color: var(--c-flame);
+    text-shadow: 4px 4px 0 var(--c-void), 4px 0 0 var(--c-void), 0 4px 0 var(--c-void);
+    margin-bottom: var(--u2);
+  }
+  .hero .lede { font-size: var(--fs-body-lg); color: var(--c-bone); max-width: 56ch; }
+
+  section { margin-bottom: var(--u8); }
+  section > h2 {
+    font-size: var(--fs-lg); color: var(--c-paper);
+    padding: var(--u) var(--u2); background: var(--c-flame); color: var(--c-void);
+    display: inline-block; margin-bottom: var(--u3);
+    box-shadow: var(--shadow-pixel);
+  }
+  section > p.intro { font-size: var(--fs-body); color: var(--c-bone); margin-bottom: var(--u3); max-width: 72ch; }
+
+  /* --- Palette grid --- */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: var(--u);
+  }
+  .swatch {
+    aspect-ratio: 1;
+    border: var(--border-1) solid var(--c-void);
+    position: relative;
+    box-shadow: var(--shadow-pixel);
+  }
+  .swatch::after {
+    content: attr(data-name);
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,.7); color: var(--c-paper);
+    font-family: var(--font-body); font-size: var(--fs-body-sm);
+    padding: 2px 4px;
+  }
+  .swatch::before {
+    content: attr(data-hex);
+    position: absolute; top: 4px; left: 4px;
+    font-family: var(--font-title); font-size: var(--fs-xs);
+    color: var(--c-void); background: var(--c-paper); padding: 2px 3px;
+  }
+  .swatch.dark::before { color: var(--c-paper); background: var(--c-void); }
+
+  .palette-group { margin-bottom: var(--u4); }
+  .palette-group h3 {
+    font-size: var(--fs-sm); color: var(--c-ash); margin-bottom: var(--u);
+    letter-spacing: 1px;
+  }
+  .palette-group p.usage {
+    font-size: var(--fs-body-sm); color: var(--c-bone); margin-bottom: var(--u2);
+    max-width: 80ch;
+  }
+
+  /* --- Type specimen --- */
+  .type-row {
+    display: grid; grid-template-columns: 120px 1fr; gap: var(--u3);
+    padding: var(--u2) 0; border-bottom: var(--border-1) dashed var(--c-stone);
+    align-items: baseline;
+  }
+  .type-row .label {
+    font-family: var(--font-title); font-size: var(--fs-xs); color: var(--c-ash);
+  }
+  .ps2p   { font-family: var(--font-title); color: var(--c-paper); }
+  .vt323  { font-family: var(--font-body);  color: var(--c-bone); }
+
+  /* --- Grid + scale --- */
+  .grid-demo {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--u3);
+  }
+  .grid-demo .frame {
+    background: var(--c-dusk); padding: var(--u2); border: var(--border-1) solid var(--c-stone);
+  }
+  .grid-demo h3 { color: var(--c-paper); margin-bottom: var(--u); font-size: var(--fs-sm); }
+  .grid-demo p  { font-size: var(--fs-body); color: var(--c-bone); margin-bottom: var(--u); }
+
+  .grid-canvas {
+    background-color: var(--c-night);
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px);
+    background-size: 8px 8px;
+    height: 200px; position: relative;
+    border: var(--border-1) solid var(--c-stone);
+  }
+  .grid-canvas .ref-box {
+    position: absolute; top: 16px; left: 16px;
+    width: 64px; height: 64px; background: var(--c-flame);
+    border: 2px solid var(--c-paper);
+  }
+  .grid-canvas .ref-label {
+    position: absolute; bottom: 8px; right: 8px;
+    font-family: var(--font-title); font-size: 8px; color: var(--c-ash);
+  }
+
+  /* --- Sprite grid --- */
+  .sprite-row {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--u3);
+    background: var(--c-night); padding: var(--u3);
+    border: var(--border-1) solid var(--c-stone);
+  }
+  .sprite-cell {
+    display: flex; flex-direction: column; align-items: center; gap: var(--u);
+  }
+  .sprite-cell .nick {
+    font-family: var(--font-title); font-size: var(--fs-xs); color: var(--c-bone);
+    text-align: center;
+  }
+  .sprite-cell .pose-label {
+    font-family: var(--font-body); font-size: var(--fs-body-sm); color: var(--c-ash);
+    text-align: center; white-space: nowrap;
+  }
+
+  /* --- Variant states --- */
+  .state-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--u3);
+  }
+  .state-cell {
+    background: var(--c-night); padding: var(--u3);
+    border: var(--border-1) solid var(--c-stone);
+    text-align: center;
+  }
+  .state-cell h4 {
+    font-size: var(--fs-xs); color: var(--c-flame); margin-bottom: var(--u);
+  }
+  .state-cell p {
+    font-size: var(--fs-body-sm); color: var(--c-ash); margin-top: var(--u);
+  }
+
+  /* --- Tokens table --- */
+  .tokens-table {
+    width: 100%; border-collapse: collapse;
+    font-size: var(--fs-body-sm);
+  }
+  .tokens-table th, .tokens-table td {
+    text-align: left; padding: var(--u-half) var(--u);
+    border-bottom: var(--border-1) dashed var(--c-stone);
+    vertical-align: middle;
+  }
+  .tokens-table th {
+    font-family: var(--font-title); font-size: var(--fs-xs);
+    color: var(--c-ash); letter-spacing: 1px;
+  }
+  .tokens-table td.preview { width: 120px; }
+  .tokens-table .token-name { font-family: var(--font-title); font-size: var(--fs-xs); color: var(--c-flame); }
+
+  /* shadow previews */
+  .shadow-demo {
+    width: 80px; height: 40px; background: var(--c-paper);
+    box-shadow: var(--shadow-pixel);
+  }
+  .shadow-demo.lg { box-shadow: var(--shadow-pixel-lg); }
+  .bevel-demo {
+    width: 80px; height: 40px; background: var(--c-dusk);
+    box-shadow: var(--bevel-up);
+  }
+  .bevel-demo.down { box-shadow: var(--bevel-down); }
+
+  /* --- A/B/C option cards --- */
+  .ab-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--u3);
+  }
+  .ab-card {
+    background: var(--c-dusk); border: var(--border-2) solid var(--c-stone);
+    padding: var(--u2); position: relative;
+  }
+  .ab-card.recommended { border-color: var(--c-flame); }
+  .ab-card .ab-tag {
+    position: absolute; top: -12px; left: var(--u2);
+    font-family: var(--font-title); font-size: var(--fs-xs);
+    background: var(--c-stone); color: var(--c-paper);
+    padding: 4px 6px;
+  }
+  .ab-card.recommended .ab-tag {
+    background: var(--c-flame); color: var(--c-void);
+  }
+  .ab-card .ab-body {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 220px; padding: var(--u2);
+    background: var(--c-night);
+    border: var(--border-1) solid var(--c-stone);
+    margin-bottom: var(--u2);
+  }
+  .ab-card h3 { font-size: var(--fs-sm); color: var(--c-paper); margin-bottom: var(--u-half); }
+  .ab-card p  { font-size: var(--fs-body-sm); color: var(--c-bone); }
+
+  /* hash demo */
+  .hash-demo {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--u2);
+    background: var(--c-night); padding: var(--u3);
+    border: var(--border-1) solid var(--c-stone);
+  }
+  .hash-demo .hcell {
+    display: flex; flex-direction: column; align-items: center; gap: var(--u-half);
+    background: var(--c-dusk); padding: var(--u-half); border: 1px solid var(--c-stone);
+  }
+  .hash-demo .nick {
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-bone); text-align: center; word-break: break-all;
+  }
+  .hash-demo .meta {
+    font-family: var(--font-body); font-size: 14px; color: var(--c-ash);
+    line-height: 1.1; text-align: center;
+  }
+
+  /* warning callout */
+  .callout {
+    background: var(--c-dusk); border-left: 6px solid var(--c-warn);
+    padding: var(--u2); margin-bottom: var(--u3);
+  }
+  .callout h4 {
+    color: var(--c-warn); font-size: var(--fs-xs); margin-bottom: var(--u-half);
+  }
+  .callout p { font-size: var(--fs-body); color: var(--c-bone); }
+</style>
+</head>
+<body data-screen-label="Design System">
+
+<nav class="nav">
+  <a href="index.html">← Inicio</a>
+  <a href="design-system.html" class="current">Sistema</a>
+  <a href="overlay.html">Overlay</a>
+  <a href="streamer.html">Panel streamer</a>
+  <a href="leaderboard.html">Leaderboard</a>
+  <a href="packs.html">Packs</a>
+  <a href="animations.html">Animaciones</a>
+</nav>
+
+<header class="hero">
+  <h1>SISTEMA DE DISEÑO</h1>
+  <p class="lede">Pixel art retro NES‑inspirado. Paleta limitada, todo en grid 8×8, transiciones en frames discretos. Esta página define paleta, tipografía, tokens y sprites — y deja decisiones abiertas como opciones A/B/C para que apruebes.</p>
+</header>
+
+<div class="callout">
+  <h4>⚠ NOTA</h4>
+  <p>El spec funcional <code>docs/superpowers/specs/2026-05-23-streamer-tinder-design.md</code> no estaba en el repo cuando empecé. He inferido las mecánicas desde tu briefing (criba = eliminación por columnas, votos = avatares que migran). Adjuntalo y reviso copys y fases concretas.</p>
+</div>
+
+<!-- ============================================================
+     1. PALETA
+     ============================================================ -->
+<section id="palette">
+  <h2>1 · PALETA BASE</h2>
+  <p class="intro">32 colores agrupados por rol funcional. Cada uso está justificado para que el sistema escale sin convertirse en sopa cromática.</p>
+
+  <div class="palette-group">
+    <h3>VOIDS &amp; PAPER · 7 colores</h3>
+    <p class="usage">Backgrounds del overlay, panels del streamer, texto. <code>--c-night</code> es el bg primario del overlay; <code>--c-dusk</code> los paneles flotantes; <code>--c-bone</code> y <code>--c-paper</code> el texto sobre fondo oscuro.</p>
+    <div class="palette-grid" id="pg-base"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>BRAND ACCENTS · 4 colores</h3>
+    <p class="usage"><code>--c-flame</code> (rosa Tinder) es el acento primario: corazones, bordes destacados, voto SÍ del streamer. <code>--c-ice</code> es el secundario: voto NO, info. Las versiones <code>-dk</code> son outlines y shadows.</p>
+    <div class="palette-grid" id="pg-brand"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>TIERS · 3 colores</h3>
+    <p class="usage">Para el podio en leaderboard, ganador final y el icono pulsante "streamer ya votó".</p>
+    <div class="palette-grid" id="pg-tier"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>ALERTS · 5 colores</h3>
+    <p class="usage"><code>--c-danger</code> = eliminado en criba, botón rojo de emergencia. <code>--c-warn</code> = aviso de cierre de votación. <code>--c-success</code> = columna ganadora, confirmaciones.</p>
+    <div class="palette-grid" id="pg-alert"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>CUERPOS DE AVATAR · 8 colores</h3>
+    <p class="usage">Asignados deterministicamente por hash de nick → índice. Cada pack puede sustituir esta sub-paleta para diferenciar partidas (ver Packs).</p>
+    <div class="palette-grid" id="pg-body"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>SKIN · 4 tonos</h3>
+    <p class="usage">Cabeza y manos. También asignados por hash (segunda lectura). Mantenidos diversos.</p>
+    <div class="palette-grid" id="pg-skin"></div>
+  </div>
+
+  <div class="palette-group">
+    <h3>HAIR · 6 tonos</h3>
+    <p class="usage">Tercera lectura del hash. Incluye un rosa "anime" deliberado para que algún avatar destaque.</p>
+    <div class="palette-grid" id="pg-hair"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     2. TIPOGRAFÍA
+     ============================================================ -->
+<section id="typography">
+  <h2>2 · TIPOGRAFÍA</h2>
+  <p class="intro">Dos familias. <strong>Press Start 2P</strong> para titulares, números grandes, botones y etiquetas — su rigidez pixelada es la voz de la marca. <strong>VT323</strong> para cuerpo y listas largas — sigue siendo monoespaciado pixel pero con mejor lectura a tamaños pequeños.</p>
+
+  <div class="pixel-panel">
+    <div class="type-row">
+      <div class="label">PS2P 48</div>
+      <div class="ps2p" style="font-size:48px">VICTORIA</div>
+    </div>
+    <div class="type-row">
+      <div class="label">PS2P 32</div>
+      <div class="ps2p" style="font-size:32px">RONDA 3 / 7</div>
+    </div>
+    <div class="type-row">
+      <div class="label">PS2P 24</div>
+      <div class="ps2p" style="font-size:24px">PIZZA TOPPINGS</div>
+    </div>
+    <div class="type-row">
+      <div class="label">PS2P 16</div>
+      <div class="ps2p" style="font-size:16px">SIGUIENTE CARTA &gt;</div>
+    </div>
+    <div class="type-row">
+      <div class="label">PS2P 12</div>
+      <div class="ps2p" style="font-size:12px">VOTOS · 234</div>
+    </div>
+    <div class="type-row">
+      <div class="label">PS2P 8</div>
+      <div class="ps2p" style="font-size:8px">@RAMENBOSS22</div>
+    </div>
+    <div class="type-row">
+      <div class="label">VT323 28</div>
+      <div class="vt323" style="font-size:28px">Anchoa contra piña. Doce votos pendientes para cerrar la ronda.</div>
+    </div>
+    <div class="type-row">
+      <div class="label">VT323 22</div>
+      <div class="vt323" style="font-size:22px">Los espectadores cuyos avatares cayeron pierden 50 puntos y ven una animación de despedida.</div>
+    </div>
+    <div class="type-row">
+      <div class="label">VT323 18</div>
+      <div class="vt323" style="font-size:18px">Texto pequeño legible: top 100 del leaderboard, tooltips, modales.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     3. GRID + ESCALADO
+     ============================================================ -->
+<section id="grid">
+  <h2>3 · GRID 8×8 + ESCALADO</h2>
+  <p class="intro">Toda dimensión, padding y posición debe ser múltiplo de 8 (excepto los píxeles internos del sprite, que son 1px nativo). Esto garantiza que cualquier escalado entero (×2, ×3, ×4) sigue siendo pixel-perfect.</p>
+
+  <div class="grid-demo">
+    <div class="frame">
+      <h3>BASE GRID</h3>
+      <p>Cada celda visible = 8px. Es la unidad <code>--u</code>.</p>
+      <div class="grid-canvas">
+        <div class="ref-box"></div>
+        <div class="ref-label">64×64 · 8u × 8u</div>
+      </div>
+    </div>
+    <div class="frame">
+      <h3>SPRITE NATIVO vs ESCALADO</h3>
+      <p>Sprite 24×30 nativo a la izquierda, ×3 al centro, ×4 a la derecha.</p>
+      <div class="grid-canvas" style="display:flex;align-items:center;justify-content:space-around;padding:0 16px">
+        <canvas id="scale-1" style="width:24px;height:30px"></canvas>
+        <canvas id="scale-3" style="width:72px;height:90px"></canvas>
+        <canvas id="scale-4" style="width:96px;height:120px"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:var(--u3); color:var(--c-paper); font-size:var(--fs-sm)">REGLAS DE ESCALADO</h3>
+  <div class="pixel-panel" style="margin-top:var(--u)">
+    <table class="tokens-table">
+      <tr><th>Superficie</th><th>Escala sprite</th><th>Justificación</th></tr>
+      <tr><td>Lobby (overlay)</td><td>×2 (48×60)</td><td>Caben 80-120 avatares en pantalla sin solaparse</td></tr>
+      <tr><td>Tally / criba</td><td>×3 (72×90)</td><td>Equilibrio: legible y caben 30/columna</td></tr>
+      <tr><td>Card reveal hero</td><td>×4 (96×120)</td><td>Foco máximo en la carta</td></tr>
+      <tr><td>Victory</td><td>×6 (144×180)</td><td>El ganador es el héroe absoluto</td></tr>
+      <tr><td>Leaderboard listado</td><td>×2 (48×60)</td><td>Cabe en filas densas con stats</td></tr>
+      <tr><td>Panel del streamer thumbs</td><td>×1 (24×30)</td><td>Sólo identificación rápida</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     4. TOKENS
+     ============================================================ -->
+<section id="tokens">
+  <h2>4 · TOKENS</h2>
+  <p class="intro">Variables CSS expuestas. Espaciado siempre múltiplo de 8. Sombras siempre stepped, nunca blur.</p>
+
+  <div class="pixel-panel">
+    <h3 style="margin-bottom:var(--u);color:var(--c-flame);font-size:var(--fs-sm)">ESPACIADO</h3>
+    <table class="tokens-table">
+      <tr><th>Token</th><th>Valor</th><th>Uso típico</th></tr>
+      <tr><td class="token-name">--u-half</td><td>4px</td><td>Padding interno de tag/chip</td></tr>
+      <tr><td class="token-name">--u</td><td>8px</td><td>Gap por defecto, padding fino</td></tr>
+      <tr><td class="token-name">--u2</td><td>16px</td><td>Gap entre cards, padding de panel</td></tr>
+      <tr><td class="token-name">--u3</td><td>24px</td><td>Separación de secciones</td></tr>
+      <tr><td class="token-name">--u4</td><td>32px</td><td>Padding hero, márgenes grandes</td></tr>
+      <tr><td class="token-name">--u6</td><td>48px</td><td>Separación entre bloques mayores</td></tr>
+      <tr><td class="token-name">--u8</td><td>64px</td><td>Sólo para landings / espacio respiración</td></tr>
+    </table>
+  </div>
+
+  <div class="pixel-panel" style="margin-top:var(--u2)">
+    <h3 style="margin-bottom:var(--u);color:var(--c-flame);font-size:var(--fs-sm)">BORDES Y SOMBRAS</h3>
+    <table class="tokens-table">
+      <tr><th>Token</th><th>Preview</th><th>Uso</th></tr>
+      <tr><td class="token-name">--shadow-pixel</td><td class="preview"><div class="shadow-demo"></div></td><td>Botones, chips, paneles flotantes pequeños</td></tr>
+      <tr><td class="token-name">--shadow-pixel-lg</td><td class="preview"><div class="shadow-demo lg"></div></td><td>Cards, modales, overlays principales</td></tr>
+      <tr><td class="token-name">--bevel-up</td><td class="preview"><div class="bevel-demo"></div></td><td>Botones en reposo (relieve hacia arriba)</td></tr>
+      <tr><td class="token-name">--bevel-down</td><td class="preview"><div class="bevel-demo down"></div></td><td>Botones pulsados / inputs activos</td></tr>
+      <tr><td class="token-name">--border-1</td><td>2px solid</td><td>Bordes finos, dividers</td></tr>
+      <tr><td class="token-name">--border-2</td><td>4px solid</td><td>Cards, frames principales</td></tr>
+      <tr><td class="token-name">--border-3</td><td>6px solid</td><td>Hero cards, ganador</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     5. SPRITE — POSES
+     ============================================================ -->
+<section id="sprites">
+  <h2>5 · SPRITES DE AVATAR · POSES</h2>
+  <p class="intro">Base 24×30 px. Cabeza 8×8 (skin), cuerpo 12×12 (body color), piernas 10×6 (pants). 6 poses estáticas. La pose viene del hash del nick — no aleatoria por sesión.</p>
+
+  <div class="sprite-row" id="pose-row"></div>
+</section>
+
+<!-- ============================================================
+     5b. OPCIONES A/B/C DE POSE FOCAL
+     ============================================================ -->
+<section id="ab-pose">
+  <h2>5b · A/B/C · POSE FOCAL DEL CARD_REVEAL</h2>
+  <p class="intro">¿Qué pose toma el avatar del streamer en el momento clave? Pendiente tu decisión:</p>
+
+  <div class="ab-grid">
+    <div class="ab-card recommended">
+      <div class="ab-tag">A · recomendada</div>
+      <div class="ab-body">
+        <canvas id="ab-pose-A" style="width:240px;height:300px"></canvas>
+      </div>
+      <h3>CHEER · BRAZOS ARRIBA</h3>
+      <p>Lectura instantánea a distancia. Funciona aunque OBS reescale fuerte.</p>
+    </div>
+    <div class="ab-card">
+      <div class="ab-tag">B</div>
+      <div class="ab-body">
+        <canvas id="ab-pose-B" style="width:240px;height:300px"></canvas>
+      </div>
+      <h3>POINT · APUNTA A LA CARTA</h3>
+      <p>Más narrativa. Funciona si el card_reveal pone el sprite a un lado.</p>
+    </div>
+    <div class="ab-card">
+      <div class="ab-tag">C</div>
+      <div class="ab-body">
+        <canvas id="ab-pose-C" style="width:240px;height:300px"></canvas>
+      </div>
+      <h3>HANDS ON HIPS · CHULO</h3>
+      <p>Atrevida y dramática. Mejor para packs irreverentes (Comida Asquerosa).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     6. VARIANTES DE ESTADO
+     ============================================================ -->
+<section id="states">
+  <h2>6 · ESTADOS DEL AVATAR</h2>
+  <p class="intro">Mismo sprite, modificadores visuales por estado de juego. Implementado como overlay pintado sobre el sprite base.</p>
+
+  <div class="state-row">
+    <div class="state-cell">
+      <h4>NORMAL</h4>
+      <canvas id="state-normal" style="width:96px;height:120px"></canvas>
+      <p>Lobby, base.</p>
+    </div>
+    <div class="state-cell">
+      <h4>HA‑VOTADO</h4>
+      <canvas id="state-voted" style="width:96px;height:120px"></canvas>
+      <p>Halo de píxeles dorados + chispas. Estable hasta el siguiente card.</p>
+    </div>
+    <div class="state-cell">
+      <h4>ELIMINADO</h4>
+      <canvas id="state-eliminated" style="width:96px;height:120px"></canvas>
+      <p>Greyscale + caída. Aparece durante criba.</p>
+    </div>
+    <div class="state-cell">
+      <h4>GANADOR</h4>
+      <canvas id="state-winner" style="width:96px;height:120px"></canvas>
+      <p>Chispas doradas alrededor. Sólo el último en pie.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     7. HASH DETERMINISTICO
+     ============================================================ -->
+<section id="hash">
+  <h2>7 · HASH NICK → SPRITE</h2>
+  <p class="intro">Algoritmo: <code>djb2</code> sobre <code>nick.toLowerCase()</code>. Mismo nick produce siempre el mismo sprite — incluso entre sesiones. 8 muestras:</p>
+
+  <div class="hash-demo" id="hash-grid"></div>
+</section>
+
+<!-- ============================================================
+     8. A/B/C LAYOUT DE COLUMNAS DE TALLY
+     ============================================================ -->
+<section id="ab-columns">
+  <h2>8 · A/B · DENSIDAD DE LA CRIBA (11 vs 10 columnas)</h2>
+  <p class="intro">El spec dice "10 columnas" pero el rango de aciertos es 0-10 (11 posibles). Mi recomendación es 11 columnas para que cada tier sea explícito; alternativa es 10 fusionando 0-aciertos en "fuera del juego".</p>
+
+  <div class="ab-grid" style="grid-template-columns:1fr 1fr">
+    <div class="ab-card recommended">
+      <div class="ab-tag">A · recomendada · 11 columnas</div>
+      <div class="ab-body" style="flex-direction:column;padding:8px">
+        <svg viewBox="0 0 480 200" style="width:100%;height:auto">
+          <g font-family="Press Start 2P" font-size="10" fill="#d9d2e8">
+            <text x="20" y="20" text-anchor="middle">0</text>
+            <text x="60" y="20" text-anchor="middle">1</text>
+            <text x="100" y="20" text-anchor="middle">2</text>
+            <text x="140" y="20" text-anchor="middle">3</text>
+            <text x="180" y="20" text-anchor="middle">4</text>
+            <text x="220" y="20" text-anchor="middle">5</text>
+            <text x="260" y="20" text-anchor="middle">6</text>
+            <text x="300" y="20" text-anchor="middle">7</text>
+            <text x="340" y="20" text-anchor="middle">8</text>
+            <text x="380" y="20" text-anchor="middle">9</text>
+            <text x="420" y="20" text-anchor="middle" fill="#ffd33d">10</text>
+          </g>
+          <!-- columns with sample heights -->
+          <g stroke="#4a3a6a" fill="#2c2440">
+            <rect x="5" y="160" width="30" height="20"/>
+            <rect x="45" y="155" width="30" height="25"/>
+            <rect x="85" y="140" width="30" height="40"/>
+            <rect x="125" y="120" width="30" height="60"/>
+            <rect x="165" y="100" width="30" height="80"/>
+            <rect x="205" y="60" width="30" height="120" fill="#ff3c8b"/>
+            <rect x="245" y="65" width="30" height="115" fill="#ff3c8b"/>
+            <rect x="285" y="80" width="30" height="100" fill="#4ad4d4"/>
+            <rect x="325" y="90" width="30" height="90" stroke="#ffd33d"/>
+            <rect x="365" y="125" width="30" height="55" stroke="#ffd33d"/>
+            <rect x="405" y="150" width="30" height="30" stroke="#ffd33d"/>
+          </g>
+        </svg>
+      </div>
+      <h3>11 COLUMNAS · 0-10 ACIERTOS</h3>
+      <p>Cada acierto tiene su tier. El streamer puede eliminar incluso a los 0-aciertos. Lectura clara, simétrica respecto al medio (5 aciertos = mitad). Ancho por columna en 1280px: ~108px.</p>
+    </div>
+    <div class="ab-card">
+      <div class="ab-tag">B · 10 columnas</div>
+      <div class="ab-body" style="flex-direction:column;padding:8px">
+        <svg viewBox="0 0 480 200" style="width:100%;height:auto">
+          <g font-family="Press Start 2P" font-size="10" fill="#d9d2e8">
+            <text x="24" y="20" text-anchor="middle">1</text>
+            <text x="68" y="20" text-anchor="middle">2</text>
+            <text x="112" y="20" text-anchor="middle">3</text>
+            <text x="156" y="20" text-anchor="middle">4</text>
+            <text x="200" y="20" text-anchor="middle">5</text>
+            <text x="244" y="20" text-anchor="middle">6</text>
+            <text x="288" y="20" text-anchor="middle">7</text>
+            <text x="332" y="20" text-anchor="middle">8</text>
+            <text x="376" y="20" text-anchor="middle">9</text>
+            <text x="420" y="20" text-anchor="middle" fill="#ffd33d">10</text>
+          </g>
+          <g stroke="#4a3a6a" fill="#2c2440">
+            <rect x="7" y="155" width="34" height="25"/>
+            <rect x="51" y="140" width="34" height="40"/>
+            <rect x="95" y="120" width="34" height="60"/>
+            <rect x="139" y="100" width="34" height="80"/>
+            <rect x="183" y="60" width="34" height="120" fill="#ff3c8b"/>
+            <rect x="227" y="65" width="34" height="115" fill="#ff3c8b"/>
+            <rect x="271" y="80" width="34" height="100" fill="#4ad4d4"/>
+            <rect x="315" y="90" width="34" height="90" stroke="#ffd33d"/>
+            <rect x="359" y="125" width="34" height="55" stroke="#ffd33d"/>
+            <rect x="403" y="150" width="34" height="30" stroke="#ffd33d"/>
+          </g>
+          <text x="240" y="195" text-anchor="middle" font-family="VT323" font-size="14" fill="#7a6a99">+ "0 aciertos: 3 viewers fuera del juego" (texto fino)</text>
+        </svg>
+      </div>
+      <h3>10 COLUMNAS · 1-10 ACIERTOS</h3>
+      <p>Respeta el literal del spec. Los 0-aciertos quedan fuera del juego y se mencionan como nota ("3 espectadores eliminados automáticamente"). Más ancho por columna (~120px).</p>
+    </div>
+  </div>
+</section>
+
+<script src="assets/sprite.js"></script>
+<script>
+  // === Render palette swatches ============================
+  function swatch(name, hex, container, dark) {
+    const el = document.createElement('div');
+    el.className = 'swatch' + (dark ? ' dark' : '');
+    el.dataset.name = name;
+    el.dataset.hex = hex.toUpperCase();
+    el.style.background = hex;
+    container.appendChild(el);
+  }
+  const pgBase = document.getElementById('pg-base');
+  [
+    ['void',  '#0a0612', true],
+    ['night', '#1a1428', true],
+    ['dusk',  '#2c2440', true],
+    ['stone', '#4a3a6a', true],
+    ['ash',   '#7a6a99', false],
+    ['bone',  '#d9d2e8', false],
+    ['paper', '#f6f0ff', false],
+    ['pure',  '#ffffff', false],
+  ].forEach(([n,h,d])=>swatch(n,h,pgBase,d));
+
+  const pgBrand = document.getElementById('pg-brand');
+  [
+    ['flame',    '#ff3c8b', true],
+    ['flame-dk', '#b81e63', true],
+    ['ice',      '#4ad4d4', false],
+    ['ice-dk',   '#1f7a8a', true],
+  ].forEach(([n,h,d])=>swatch(n,h,pgBrand,d));
+
+  const pgTier = document.getElementById('pg-tier');
+  [
+    ['gold',   '#ffd33d', false],
+    ['silver', '#b8c4d4', false],
+    ['bronze', '#c97a3a', true],
+  ].forEach(([n,h,d])=>swatch(n,h,pgTier,d));
+
+  const pgAlert = document.getElementById('pg-alert');
+  [
+    ['danger',    '#ff5b5b', true],
+    ['danger-dk', '#8a1f1f', true],
+    ['warn',      '#ff9b3d', true],
+    ['success',   '#5fde6f', false],
+    ['success-dk','#1f7a3a', true],
+  ].forEach(([n,h,d])=>swatch(n,h,pgAlert,d));
+
+  const pgBody = document.getElementById('pg-body');
+  SpriteEngine.BODY_COLORS.forEach((h,i)=>swatch('body-'+(i+1),h,pgBody, h==='#ffffff'?false:true));
+
+  const pgSkin = document.getElementById('pg-skin');
+  SpriteEngine.SKIN_COLORS.forEach((h,i)=>swatch('skin-'+(i+1),h,pgSkin, false));
+
+  const pgHair = document.getElementById('pg-hair');
+  SpriteEngine.HAIR_COLORS.forEach((h,i)=>swatch('hair-'+(i+1),h,pgHair, true));
+
+  // === Render scale demo =================================
+  ['scale-1','scale-3','scale-4'].forEach(id=>{
+    const c = document.getElementById(id);
+    SpriteEngine.renderToCanvas(c, 'ramenboss22', { pose: 'cheer' });
+  });
+
+  // === Render pose row ===================================
+  const poseRow = document.getElementById('pose-row');
+  const POSES = SpriteEngine.POSES;
+  const nicks = ['ramenboss22','pixelqueen','bitwarrior','glitch_god','crt_kid','old_yeller'];
+  POSES.forEach((p,i)=>{
+    const cell = document.createElement('div');
+    cell.className = 'sprite-cell';
+    const cv = document.createElement('canvas');
+    cv.style.width = '120px'; cv.style.height = '150px';
+    SpriteEngine.renderToCanvas(cv, nicks[i], { pose: p });
+    cell.appendChild(cv);
+    const lbl = document.createElement('div');
+    lbl.className = 'pose-label';
+    lbl.textContent = p.replace('_',' ');
+    cell.appendChild(lbl);
+    const nk = document.createElement('div');
+    nk.className = 'nick';
+    nk.textContent = '@' + nicks[i];
+    cell.appendChild(nk);
+    poseRow.appendChild(cell);
+  });
+
+  // === A/B/C poses for card_reveal =======================
+  SpriteEngine.renderToCanvas(document.getElementById('ab-pose-A'), 'ramenboss22', { pose: 'cheer' });
+  SpriteEngine.renderToCanvas(document.getElementById('ab-pose-B'), 'pixelqueen', { pose: 'point' });
+  SpriteEngine.renderToCanvas(document.getElementById('ab-pose-C'), 'bitwarrior', { pose: 'hands_hips' });
+
+  // === States ============================================
+  SpriteEngine.renderToCanvas(document.getElementById('state-normal'),      'ramenboss22', { pose: 'idle',  state: 'normal' });
+  SpriteEngine.renderToCanvas(document.getElementById('state-voted'),       'ramenboss22', { pose: 'arms_up', state: 'voted' });
+  SpriteEngine.renderToCanvas(document.getElementById('state-eliminated'),  'ramenboss22', { pose: 'idle',  state: 'eliminated' });
+  SpriteEngine.renderToCanvas(document.getElementById('state-winner'),      'ramenboss22', { pose: 'cheer', state: 'winner' });
+
+  // === Hash demo =========================================
+  const hashGrid = document.getElementById('hash-grid');
+  const demoNicks = ['xqc_fan','ramenboss22','pixelqueen','bitwarrior','glitch_god','crt_kid','old_yeller','snek_42'];
+  demoNicks.forEach(n=>{
+    const cell = document.createElement('div');
+    cell.className = 'hcell';
+    const cv = document.createElement('canvas');
+    cv.style.width = '72px'; cv.style.height = '90px';
+    const spec = SpriteEngine.renderToCanvas(cv, n, {});
+    cell.appendChild(cv);
+    const nk = document.createElement('div'); nk.className = 'nick'; nk.textContent = '@'+n;
+    cell.appendChild(nk);
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.innerHTML = `pose:${spec.pose}<br>body:${SpriteEngine.BODY_COLORS.indexOf(spec.body)+1}`;
+    cell.appendChild(meta);
+    hashGrid.appendChild(cell);
+  });
+</script>
+
+</body>
+</html>

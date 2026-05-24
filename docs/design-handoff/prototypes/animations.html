@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Streamer Tinder — Animaciones clave</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; min-height: 100vh; }
+
+  .nav {
+    background: var(--c-night); padding: var(--u2) var(--u3);
+    display: flex; gap: var(--u2); align-items: center;
+    border-bottom: var(--border-1) solid var(--c-stone);
+    flex-wrap: wrap;
+  }
+  .nav h1 { font-size: var(--fs-md); color: var(--c-flame); margin-right: auto; }
+  .nav a {
+    font-family: var(--font-title); font-size: 8px;
+    padding: var(--u-half) var(--u);
+    border: 2px solid var(--c-stone); color: var(--c-ash);
+  }
+  .nav a:hover { color: var(--c-void); background: var(--c-flame); border-color: var(--c-flame); }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: var(--u4) var(--u3) var(--u8); }
+
+  .hero h1 {
+    font-size: 56px; color: var(--c-flame);
+    text-shadow: 5px 5px 0 var(--c-void); margin-bottom: var(--u);
+  }
+  .hero p {
+    font-size: 28px; color: var(--c-bone); margin-bottom: var(--u4);
+    max-width: 68ch;
+  }
+  .hero p strong { color: var(--c-flame); }
+
+  /* === Anim section === */
+  .anim {
+    margin-bottom: var(--u8);
+    border: var(--border-2) solid var(--c-paper);
+    background: var(--c-dusk);
+    box-shadow: var(--shadow-pixel-lg);
+  }
+  .anim-head {
+    background: var(--c-flame);
+    color: var(--c-void);
+    padding: var(--u2) var(--u3);
+    display: grid; grid-template-columns: 1fr auto; gap: var(--u2); align-items: center;
+  }
+  .anim-head h2 {
+    font-family: var(--font-title); font-size: 24px; color: var(--c-void);
+  }
+  .anim-head .specs {
+    font-family: var(--font-title); font-size: 10px; color: var(--c-void);
+    display: flex; gap: var(--u3);
+  }
+  .anim-head .specs span {
+    padding: 4px 8px; background: var(--c-void); color: var(--c-flame);
+  }
+
+  .anim-body {
+    padding: var(--u3);
+  }
+  .anim-stage {
+    background: var(--c-night);
+    border: 4px solid var(--c-stone);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: var(--u3);
+  }
+  .anim-stage.tall { height: 480px; }
+  .anim-stage.medium { height: 360px; }
+  .anim-stage.short { height: 240px; }
+
+  .anim-controls {
+    display: flex; gap: var(--u); align-items: center;
+    margin-bottom: var(--u2);
+    padding: var(--u);
+    background: var(--c-night);
+    border: 2px solid var(--c-stone);
+  }
+  .anim-controls button {
+    font-family: var(--font-title); font-size: 10px;
+    padding: var(--u) var(--u2);
+    background: var(--c-flame); color: var(--c-void);
+    border: 2px solid var(--c-paper); cursor: pointer;
+  }
+  .anim-controls .frame-label {
+    font-family: var(--font-title); font-size: 10px;
+    color: var(--c-bone); margin-left: auto;
+  }
+
+  /* keyframes strip */
+  .keyframes {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--u2);
+    margin-bottom: var(--u3);
+  }
+  .kf {
+    background: var(--c-night);
+    border: 2px solid var(--c-stone);
+    padding: var(--u);
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+  }
+  .kf-label {
+    position: absolute; top: 4px; left: 4px;
+    font-family: var(--font-title); font-size: 8px;
+    background: var(--c-flame); color: var(--c-void);
+    padding: 2px 4px; z-index: 5;
+  }
+  .kf-time {
+    position: absolute; bottom: 4px; right: 4px;
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-stone); z-index: 5;
+  }
+
+  /* description box */
+  .anim-desc {
+    background: var(--c-night); padding: var(--u2);
+    border-left: 4px solid var(--c-flame);
+    font-family: var(--font-body); font-size: 22px;
+    color: var(--c-bone);
+    margin-bottom: var(--u2);
+  }
+  .anim-desc strong { color: var(--c-flame); font-family: var(--font-title); font-size: 12px; }
+  .anim-desc code {
+    background: var(--c-void); padding: 2px 6px;
+    color: var(--c-paper); font-size: 16px;
+  }
+
+  /* timing diagram */
+  .timing {
+    background: var(--c-night); border: 2px solid var(--c-stone);
+    padding: var(--u2); margin-bottom: var(--u2);
+  }
+  .timing-track {
+    height: 24px; background: var(--c-void);
+    border: 2px solid var(--c-stone); position: relative;
+    margin: var(--u2) 0;
+  }
+  .timing-track .segment {
+    position: absolute; top: 0; bottom: 0;
+    border-right: 2px solid var(--c-paper);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-void);
+  }
+  .timing-marks {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-ash);
+  }
+
+  /* === Specific animations === */
+
+  /* MIGRATION */
+  @keyframes migrate-demo {
+    0%   { transform: translate(var(--from-x), var(--from-y)); }
+    100% { transform: translate(var(--to-x), var(--to-y)); }
+  }
+  .mig-avatar {
+    position: absolute;
+    width: 48px; height: 60px;
+    animation: migrate-demo 2.5s steps(20) infinite;
+  }
+  .mig-column {
+    position: absolute; width: 240px; bottom: 0;
+    border: 2px dashed var(--c-stone);
+  }
+  .mig-column.left  { left: 80px; height: 200px; border-color: var(--c-flame); }
+  .mig-column.right { right: 80px; height: 200px; border-color: var(--c-ice); }
+  .mig-column .lbl {
+    position: absolute; top: -28px; left: 0; right: 0;
+    text-align: center; font-family: var(--font-title); font-size: 10px;
+  }
+  .mig-column.left .lbl  { color: var(--c-flame); }
+  .mig-column.right .lbl { color: var(--c-ice); }
+  /* CRIBA */
+  @keyframes criba-fall-demo {
+    0%   { transform: translate(0,0) rotate(0); opacity: 1; }
+    15%  { transform: translate(2px,15px) rotate(3deg); }
+    40%  { transform: translate(-3px,80px) rotate(-5deg); }
+    70%  { transform: translate(5px,180px) rotate(10deg); opacity: 1; }
+    100% { transform: translate(-2px,320px) rotate(20deg); opacity: 0; }
+  }
+  .criba-stage { position: relative; height: 100%; }
+  .criba-col {
+    position: absolute; top: 20px; bottom: 20px; width: 320px;
+    border: 4px dashed var(--c-stone);
+    padding: var(--u);
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+    align-content: start;
+  }
+  .criba-col.left  { left: 40px; border-color: var(--c-success); }
+  .criba-col.right { right: 40px; border-color: var(--c-danger); }
+  .criba-col canvas { width: 48px; height: 60px; }
+  .criba-col.right canvas { animation: criba-fall-demo 1.8s steps(10) infinite; }
+  .criba-col.right canvas:nth-child(2)  { animation-delay: 0.05s; }
+  .criba-col.right canvas:nth-child(3)  { animation-delay: 0.1s; }
+  .criba-col.right canvas:nth-child(4)  { animation-delay: 0.15s; }
+  .criba-col.right canvas:nth-child(5)  { animation-delay: 0.2s; }
+  .criba-col.right canvas:nth-child(6)  { animation-delay: 0.25s; }
+  .criba-col.right canvas:nth-child(7)  { animation-delay: 0.3s; }
+  .criba-col.right canvas:nth-child(8)  { animation-delay: 0.35s; }
+  .criba-col.right canvas:nth-child(9)  { animation-delay: 0.4s; }
+  .criba-col.right canvas:nth-child(10) { animation-delay: 0.45s; }
+  .criba-col .lbl {
+    position: absolute; top: -24px; left: 0; right: 0; text-align: center;
+    font-family: var(--font-title); font-size: 12px;
+  }
+  .criba-col.left  .lbl { color: var(--c-success); }
+  .criba-col.right .lbl { color: var(--c-danger); animation: pixel-blink 0.4s step-end infinite; }
+
+  /* CONFETTI */
+  .confetti-stage {
+    position: relative; height: 100%;
+    background: var(--c-night);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .confetti-stage .crown {
+    font-family: var(--font-title); font-size: 32px;
+    color: var(--c-gold);
+    text-shadow: 4px 4px 0 var(--c-flame-dk);
+    animation: pixel-pulse 0.5s step-end infinite;
+    z-index: 5;
+  }
+  @keyframes confetti-fall-demo {
+    0%   { transform: translateY(-30px) rotate(0); }
+    50%  { transform: translateY(180px) rotate(180deg); }
+    100% { transform: translateY(380px) rotate(360deg); }
+  }
+  .confetti-stage i {
+    position: absolute; width: 10px; height: 10px;
+    top: -16px;
+    animation: confetti-fall-demo 2s steps(20) infinite linear;
+  }
+
+  /* PULSE */
+  .pulse-stage {
+    display: flex; align-items: center; justify-content: center; gap: var(--u4);
+    height: 100%;
+  }
+  .pulse-card {
+    background: var(--c-void); border: 4px solid var(--c-gold);
+    padding: var(--u2);
+    display: flex; gap: var(--u2); align-items: center;
+    font-family: var(--font-title); font-size: 14px; color: var(--c-gold);
+  }
+  .pulse-card .dot {
+    width: 24px; height: 24px; background: var(--c-gold);
+    animation: pixel-blink 0.6s step-end infinite;
+  }
+  .pulse-card.fast .dot { animation-duration: 0.3s; }
+  .pulse-card.slow .dot { animation-duration: 1.2s; }
+  .pulse-card.idle .dot { background: var(--c-stone); animation: none; }
+  .pulse-card.idle { border-color: var(--c-stone); color: var(--c-stone); }
+
+  /* table */
+  .anim-table { width: 100%; border-collapse: collapse; font-size: 18px; }
+  .anim-table th, .anim-table td {
+    text-align: left; padding: var(--u-half) var(--u);
+    border-bottom: 2px dashed var(--c-stone);
+    font-family: var(--font-body);
+  }
+  .anim-table th {
+    font-family: var(--font-title); font-size: 8px;
+    color: var(--c-ash); letter-spacing: 1px;
+  }
+  .anim-table td.k {
+    font-family: var(--font-title); font-size: 10px; color: var(--c-flame);
+  }
+  .anim-table td code {
+    background: var(--c-void); color: var(--c-paper); padding: 2px 6px;
+  }
+</style>
+</head>
+<body data-screen-label="Animations">
+
+<header class="nav">
+  <h1>ANIMACIONES CLAVE</h1>
+  <a href="index.html">← Inicio</a>
+  <a href="design-system.html">Sistema</a>
+  <a href="overlay.html">Overlay</a>
+  <a href="streamer.html">Panel</a>
+  <a href="leaderboard.html">Leaderboard</a>
+  <a href="packs.html">Packs</a>
+</header>
+
+<div class="page">
+
+  <section class="hero">
+    <h1>FRAME‑BY‑FRAME</h1>
+    <p>Cuatro animaciones definidas con <strong>frame count, duración, función de timing (siempre <code style="background:var(--c-void);padding:2px 6px;color:var(--c-paper);font-size:16px">steps()</code>, nunca ease)</strong> y descomposición en keyframes. Pasa el ratón por una para verla en bucle. Las implementaciones reales irán como <code style="background:var(--c-void);padding:2px 6px;color:var(--c-paper);font-size:16px">@keyframes</code> de Angular + <code style="background:var(--c-void);padding:2px 6px;color:var(--c-paper);font-size:16px">animation-timing-function: steps(N)</code>.</p>
+  </section>
+
+  <!-- ====================================================
+       1. MIGRACIÓN A COLUMNAS (TALLY)
+       ==================================================== -->
+  <section class="anim">
+    <header class="anim-head">
+      <h2>1 · MIGRACIÓN A COLUMNAS · TALLY</h2>
+      <div class="specs">
+        <span>DUR · 2500ms</span>
+        <span>STEPS · 20</span>
+        <span>FRAMES · 20</span>
+      </div>
+    </header>
+    <div class="anim-body">
+      <div class="anim-desc">
+        <strong>QUÉ ·</strong> Tras la décima carta los avatares de los viewers se reorganizan visualmente desde su posición de lobby a su columna de tier según aciertos (0-10). Los avatares "saltan" en lugar de deslizarse — frame-by-frame sin easing. <strong>Cómo ·</strong> cada avatar tiene su tier de destino pre-calculado; el sistema dispara <code>animation: migrate 2.5s steps(20)</code> con <code>animation-delay</code> escalonado por 30ms. Arco simulado interpolando <code>(from → control → to)</code> con bezier discreto.
+      </div>
+
+      <div class="anim-stage tall">
+        <div class="mig-column left"><div class="lbl">TIER BAJO · 0-3 aciertos</div></div>
+        <div class="mig-column right"><div class="lbl">TIER ALTO · 7-10 aciertos</div></div>
+        <div id="migrating-avatars"></div>
+      </div>
+
+      <div class="timing">
+        <div class="timing-track">
+          <div class="segment" style="left:0%;width:20%;background:var(--c-flame)">DISPATCH</div>
+          <div class="segment" style="left:20%;width:50%;background:var(--c-ice)">MIGRATION</div>
+          <div class="segment" style="left:70%;width:20%;background:var(--c-success)">SETTLE</div>
+          <div class="segment" style="left:90%;width:10%;background:var(--c-warn)">COUNT</div>
+        </div>
+        <div class="timing-marks">
+          <span>0ms</span><span>500</span><span>1000</span><span>1500</span><span>2000</span><span>2500ms</span>
+        </div>
+      </div>
+
+      <table class="anim-table">
+        <tr><th>FRAME</th><th>TIEMPO</th><th>EVENTO</th></tr>
+        <tr><td class="k">F00</td><td><code>0ms</code></td><td>Cierre de votación. Avatares parpadean 1 frame en blanco.</td></tr>
+        <tr><td class="k">F04</td><td><code>500ms</code></td><td>Cada avatar lee su <code>vote</code> del estado. Comienzan a moverse en grupos de 5 con delays de 30ms.</td></tr>
+        <tr><td class="k">F12</td><td><code>1500ms</code></td><td>Pico de la migración — la pantalla está llena de avatares en tránsito.</td></tr>
+        <tr><td class="k">F16</td><td><code>2000ms</code></td><td>Los primeros aterrizan en su columna. Aplicación de estado <code>voted</code> (halo dorado).</td></tr>
+        <tr><td class="k">F20</td><td><code>2500ms</code></td><td>Todos asentados. El contador grande de la columna aparece de golpe (no easing).</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       2. CAÍDA DE COLUMNA (CRIBA)
+       ==================================================== -->
+  <section class="anim">
+    <header class="anim-head">
+      <h2>2 · CAÍDA DE COLUMNA · CRIBA</h2>
+      <div class="specs">
+        <span>DUR · 1800ms</span>
+        <span>STEPS · 10</span>
+        <span>FRAMES · 10</span>
+      </div>
+    </header>
+    <div class="anim-body">
+      <div class="anim-desc">
+        <strong>QUÉ ·</strong> En la fase de criba el streamer clica el tier que quiere eliminar. Los avatares de esa columna se desploman con gravedad pixelada. Cada uno cae con offset horizontal y rotación únicos. <strong>Cómo ·</strong> <code>animation: criba-fall 1.8s steps(10) forwards</code> con curva de gravedad discreta (no ease) — y=k·t². Delays escalonados por 50ms producen efecto de cascada.
+      </div>
+
+      <div class="anim-stage tall">
+        <div class="criba-stage">
+          <div class="criba-col left">
+            <div class="lbl">TIER QUE SOBREVIVE</div>
+            <div id="criba-survivors"></div>
+          </div>
+          <div class="criba-col right">
+            <div class="lbl">TIER ELIMINADO (clic libre)</div>
+            <div id="criba-falling"></div>
+          </div>
+        </div>
+      </div>
+
+      <table class="anim-table">
+        <tr><th>FRAME</th><th>TIEMPO</th><th>EVENTO</th></tr>
+        <tr><td class="k">F00</td><td><code>0ms</code></td><td>La columna perdedora vibra horizontalmente 6 ciclos (shake), borde rojo parpadea.</td></tr>
+        <tr><td class="k">F01</td><td><code>180ms</code></td><td>Los avatares cambian a estado <code>eliminated</code> (greyscale + dim).</td></tr>
+        <tr><td class="k">F03</td><td><code>540ms</code></td><td>Comienza la caída. Rotación inicial 0°, gravedad acelera con cada step.</td></tr>
+        <tr><td class="k">F06</td><td><code>1080ms</code></td><td>Mitad de pantalla. Rotaciones de 10-20°. Spawn de partículas de polvo por cada uno.</td></tr>
+        <tr><td class="k">F09</td><td><code>1620ms</code></td><td>Salen del frame inferior. Alpha → 0.</td></tr>
+        <tr><td class="k">F10</td><td><code>1800ms</code></td><td>Limpieza. La columna ganadora se centra suavemente (1 frame, no transition).</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       3. CONFETI DE VICTORIA
+       ==================================================== -->
+  <section class="anim">
+    <header class="anim-head">
+      <h2>3 · CONFETI DE VICTORIA</h2>
+      <div class="specs">
+        <span>DUR · 2000ms (loop)</span>
+        <span>STEPS · 20</span>
+        <span>PARTÍCULAS · 80</span>
+      </div>
+    </header>
+    <div class="anim-body">
+      <div class="anim-desc">
+        <strong>QUÉ ·</strong> Lluvia de cuadraditos de 8×8 px en colores del pack activo. Loop indefinido durante la pantalla de victoria. <strong>Cómo ·</strong> 80 elementos <code>&lt;i&gt;</code> generados en JS, cada uno con <code>animation-duration</code> randomizado en [1.5s, 3s], <code>left</code> random 0-100%, <code>background</code> del array de paleta del pack, <code>animation-delay</code> random [0, 2s]. Rotación 360° en 10 steps.
+      </div>
+
+      <div class="anim-stage tall">
+        <div class="confetti-stage" id="confetti-demo">
+          <div class="crown">¡VICTORIA!</div>
+        </div>
+      </div>
+
+      <table class="anim-table">
+        <tr><th>FRAME</th><th>TIEMPO</th><th>EVENTO</th></tr>
+        <tr><td class="k">F00</td><td><code>0ms</code></td><td>Spawn inicial: 80 partículas distribuidas verticalmente entre <code>-30px</code> y <code>+400px</code>.</td></tr>
+        <tr><td class="k">F04</td><td><code>400ms</code></td><td>Primera oleada llega a la mitad. Rotación = 72°.</td></tr>
+        <tr><td class="k">F10</td><td><code>1000ms</code></td><td>Partículas atravesando la zona del campeón.</td></tr>
+        <tr><td class="k">F20</td><td><code>2000ms</code></td><td>Loop. Las partículas que salieron por abajo re-aparecen arriba con offset nuevo (por la propiedad <code>animation-iteration-count: infinite</code>).</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       4. PULSE DEL STREAMER YA VOTÓ
+       ==================================================== -->
+  <section class="anim">
+    <header class="anim-head">
+      <h2>4 · PULSE · "STREAMER YA VOTÓ"</h2>
+      <div class="specs">
+        <span>DUR · 600ms (loop)</span>
+        <span>STEPS · 2</span>
+        <span>FRAMES · 2</span>
+      </div>
+    </header>
+    <div class="anim-body">
+      <div class="anim-desc">
+        <strong>QUÉ ·</strong> Icono en la barra superior del overlay con un punto que parpadea 50/50 mientras la votación está abierta. <strong>Cómo ·</strong> <code>opacity: 1 ↔ 0</code> alternando cada 300ms con <code>step-end</code>. Sin fade. Cuando la votación está cerca de cerrar (&lt;5s), se acelera a 300ms total. Cuando termina, se queda fijo encendido.
+      </div>
+
+      <div class="anim-stage short">
+        <div class="pulse-stage">
+          <div class="pulse-card idle">
+            <span class="dot"></span> STREAMER PENDIENTE
+          </div>
+          <div class="pulse-card">
+            <span class="dot"></span> STREAMER VOTÓ
+          </div>
+          <div class="pulse-card fast">
+            <span class="dot"></span> CIERRA EN 3s
+          </div>
+        </div>
+      </div>
+
+      <table class="anim-table">
+        <tr><th>ESTADO</th><th>RITMO</th><th>FRECUENCIA</th></tr>
+        <tr><td class="k">PENDIENTE</td><td><code>idle</code></td><td>Sin parpadeo. Color grey (<code>--c-stone</code>).</td></tr>
+        <tr><td class="k">VOTADO</td><td><code>600ms</code></td><td>Parpadeo lento, color oro.</td></tr>
+        <tr><td class="k">URGENTE (&lt;5s)</td><td><code>300ms</code></td><td>Parpadeo rápido, mismo color.</td></tr>
+        <tr><td class="k">CERRADO</td><td><code>fijo</code></td><td>Encendido permanentemente.</td></tr>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script src="assets/sprite.js"></script>
+<script>
+  function makeNicks(n, seed) {
+    const a = ['pixel','bit','glitch','crt','retro','snek','ramen','byte','poke','ghost','neon','arcade','boss','noob'];
+    const b = ['queen','warrior','god','kid','lord','master','baby','slayer','99','77','22'];
+    const out = []; let s = seed || 1;
+    for (let i = 0; i < n; i++) {
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p1 = a[s % a.length];
+      s = (s * 1103515245 + 12345) >>> 0;
+      const p2 = b[s % b.length];
+      out.push(p1 + '_' + p2 + i);
+    }
+    return out;
+  }
+
+  // === Migration: scatter avatars and animate them to columns ===
+  const migHost = document.getElementById('migrating-avatars');
+  const stageW = 1200, stageH = 480;
+  const nicks = makeNicks(24, 999);
+  nicks.forEach((n, i) => {
+    const c = document.createElement('canvas');
+    c.className = 'mig-avatar';
+    const goLeft = i % 2 === 0;
+    // start: scattered center
+    const fromX = 400 + (i % 5) * 80;
+    const fromY = 80 + Math.floor(i / 5) * 50;
+    // to: column position
+    const colX = goLeft ? 80 + ((i / 2 | 0) % 5) * 48 : (stageW - 80 - 240) + ((i / 2 | 0) % 5) * 48;
+    const colY = 280 + Math.floor((i / 2) / 5) * 60;
+    c.style.setProperty('--from-x', fromX + 'px');
+    c.style.setProperty('--from-y', fromY + 'px');
+    c.style.setProperty('--to-x', colX + 'px');
+    c.style.setProperty('--to-y', colY + 'px');
+    c.style.animationDelay = (i * 0.04) + 's';
+    SpriteEngine.renderToCanvas(c, n, { state: 'voted' });
+    migHost.appendChild(c);
+  });
+
+  // === Criba ===
+  const survivors = document.getElementById('criba-survivors');
+  const falling = document.getElementById('criba-falling');
+  // Render directly into parent grid
+  const sHost = survivors.parentElement;
+  const fHost = falling.parentElement;
+  survivors.remove(); falling.remove();
+  const survNicks = makeNicks(15, 1234);
+  survNicks.forEach(n => {
+    const c = document.createElement('canvas');
+    SpriteEngine.renderToCanvas(c, n, { state: 'voted' });
+    sHost.appendChild(c);
+  });
+  const fallNicks = makeNicks(12, 5678);
+  fallNicks.forEach(n => {
+    const c = document.createElement('canvas');
+    SpriteEngine.renderToCanvas(c, n, { state: 'eliminated' });
+    fHost.appendChild(c);
+  });
+
+  // === Confetti ===
+  const confetti = document.getElementById('confetti-demo');
+  const colors = ['#ff3c8b','#4ad4d4','#5fde6f','#ffd33d','#c97aff','#ff8a3d','#6a8aff','#ffffff'];
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement('i');
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    p.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+    confetti.appendChild(p);
+  }
+</script>
+
+</body>
+</html>
