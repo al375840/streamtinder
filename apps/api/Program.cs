@@ -27,6 +27,15 @@ builder.Services.AddSingleton(sp =>
     return repo;
 });
 
+// camelCase + string enums for all minimal API endpoints
+builder.Services.ConfigureHttpJsonOptions(opts =>
+{
+    opts.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    opts.SerializerOptions.Converters.Add(
+        new System.Text.Json.Serialization.JsonStringEnumConverter(
+            System.Text.Json.JsonNamingPolicy.CamelCase));
+});
+
 builder.Services.AddSignalR(hubOpts =>
 {
     hubOpts.EnableDetailedErrors = true; // TODO: disable after confirming enum fix works
