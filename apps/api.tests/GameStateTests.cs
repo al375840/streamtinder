@@ -124,6 +124,11 @@ public class GameStateTests
     {
         var s = GameState.New().OpenLobby(TestPack(), DateTime.UtcNow);
         for (int i = 0; i < players; i++) s = s.Join($"u{i}", DateTime.UtcNow, false);
+        // StartGame requires LobbyMin; if caller asked for fewer "named" players,
+        // top up with filler joiners so the game can start. The named u0..u(players-1)
+        // are what the tests assert on.
+        for (int i = players; i < GameState.LobbyMin; i++)
+            s = s.Join($"filler{i}", DateTime.UtcNow, false);
         return s.StartGame(DateTime.UtcNow);
     }
 
@@ -223,5 +228,42 @@ public class GameStateTests
             s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
         s = s.EnterCriba().EliminateTier(0).EliminateTier(0);
         Assert.Single(s.EliminatedTiers);
+    }
+
+    [Fact]
+    public void FinalizeCriba_returns_survivors_with_bonus_distributed()
+    {
+        // 4 jugadores: u0 acierta 10, u1 acierta 7, u2 acierta 3, u3 acierta 0
+        var s = StartedGame(players: 4);
+        for (int i = 0; i < 10; i++)
+        {
+            s = s.StreamerVotes(VoteDirection.Right);
+            if (i < 10) s = s.ViewerVotes("u0", VoteDirection.Right, DateTime.UtcNow);
+            if (i < 7)  s = s.ViewerVotes("u1", VoteDirection.Right, DateTime.UtcNow);
+            if (i < 3)  s = s.ViewerVotes("u2", VoteDirection.Right, DateTime.UtcNow);
+            s = s.CloseCard().NextCard(DateTime.UtcNow);
+        }
+        // Eliminar tiers 0,1,2,3 → sobreviven u0(10 aciertos) y u1(7)
+        s = s.EnterCriba()
+            .EliminateTier(0).EliminateTier(1).EliminateTier(2).EliminateTier(3);
+
+        var result = s.FinalizeCriba();
+        Assert.Equal(GamePhase.Victory, result.State.Phase);
+        Assert.Equal(2, result.Survivors.Count);
+        Assert.All(result.Survivors, w => Assert.Equal(50, w.Bonus));
+        var u0 = result.Survivors.First(w => w.Nick == "u0");
+        Assert.Equal(10 * 10 + 50, u0.TotalPoints);
+    }
+
+    [Fact]
+    public void FinalizeCriba_with_no_survivors_returns_empty()
+    {
+        var s = StartedGame(players: 2);
+        for (int i = 0; i < 10; i++)
+            s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
+        s = s.EnterCriba();
+        for (int t = 0; t <= 10; t++) s = s.EliminateTier(t);
+        var result = s.FinalizeCriba();
+        Assert.Empty(result.Survivors);
     }
 }

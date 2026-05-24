@@ -157,4 +157,27 @@ public sealed record GameState(
         list.Add(tier);
         return this with { EliminatedTiers = list };
     }
+
+    public CribaResult FinalizeCriba()
+    {
+        if (Phase != GamePhase.Criba)
+            throw new InvalidOperationException($"Cannot finalize criba from {Phase}");
+
+        var survivors = AciertosByNick
+            .Where(kv => !EliminatedTiers.Contains(kv.Value))
+            .Select(kv => kv.Key)
+            .ToList();
+
+        var bonusPerHead = survivors.Count == 0 ? 0 : BonusPool / survivors.Count;
+
+        var winners = survivors.Select(nick =>
+        {
+            var aciertos = AciertosByNick[nick];
+            var total = aciertos * PointsPerHit + bonusPerHead;
+            return new GameWinner(nick, aciertos, bonusPerHead, total);
+        }).OrderByDescending(w => w.TotalPoints).ToList();
+
+        var newState = this with { Phase = GamePhase.Victory };
+        return new CribaResult(newState, winners);
+    }
 }
