@@ -43,4 +43,33 @@ public sealed record GameState(
             LobbyCountdownEndsAt = now.AddSeconds(LobbySeconds)
         };
     }
+
+    public GameState Join(string nick, DateTime now, bool isBanned)
+    {
+        if (Phase != GamePhase.Lobby) return this;
+        if (isBanned) return this;
+        if (LobbyPlayers.Any(p => p.Nick == nick)) return this;
+        if (LobbyPlayers.Count >= LobbyMax) return this;
+        var updated = LobbyPlayers.ToList();
+        updated.Add(new LobbyPlayer(nick, now));
+        return this with { LobbyPlayers = updated };
+    }
+
+    public GameState Leave(string nick)
+    {
+        if (Phase != GamePhase.Lobby) return this;
+        var updated = LobbyPlayers.Where(p => p.Nick != nick).ToList();
+        if (updated.Count == LobbyPlayers.Count) return this;
+        return this with { LobbyPlayers = updated };
+    }
+
+    public GameState VaciarLobby(DateTime now)
+    {
+        if (Phase != GamePhase.Lobby) return this;
+        return this with
+        {
+            LobbyPlayers = Array.Empty<LobbyPlayer>(),
+            LobbyCountdownEndsAt = now.AddSeconds(LobbySeconds)
+        };
+    }
 }
