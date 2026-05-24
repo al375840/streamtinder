@@ -173,4 +173,55 @@ public class GameStateTests
         Assert.Equal(GamePhase.CardReveal, s.Phase);
         Assert.Equal(0, s.AciertosByNick["u0"]);
     }
+
+    [Fact]
+    public void NextCard_advances_index_back_to_Card()
+    {
+        var s = StartedGame().StreamerVotes(VoteDirection.Right).CloseCard()
+            .NextCard(DateTime.UtcNow);
+        Assert.Equal(GamePhase.Card, s.Phase);
+        Assert.Equal(1, s.CardIndex);
+        Assert.Null(s.StreamerVote);
+        Assert.Empty(s.CurrentCardVotes);
+    }
+
+    [Fact]
+    public void NextCard_after_last_card_goes_to_TallyTransition()
+    {
+        var s = StartedGame();
+        for (int i = 0; i < 10; i++)
+            s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
+        Assert.Equal(GamePhase.TallyTransition, s.Phase);
+    }
+
+    [Fact]
+    public void EnterCriba_from_TallyTransition()
+    {
+        var s = StartedGame();
+        for (int i = 0; i < 10; i++)
+            s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
+        s = s.EnterCriba();
+        Assert.Equal(GamePhase.Criba, s.Phase);
+    }
+
+    [Fact]
+    public void EliminateTier_marks_tier_as_dead()
+    {
+        var s = StartedGame();
+        for (int i = 0; i < 10; i++)
+            s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
+        s = s.EnterCriba().EliminateTier(0).EliminateTier(3);
+        Assert.Contains(0, s.EliminatedTiers);
+        Assert.Contains(3, s.EliminatedTiers);
+    }
+
+    [Fact]
+    public void EliminateTier_is_idempotent()
+    {
+        var s = StartedGame();
+        for (int i = 0; i < 10; i++)
+            s = s.StreamerVotes(VoteDirection.Right).CloseCard().NextCard(DateTime.UtcNow);
+        s = s.EnterCriba().EliminateTier(0).EliminateTier(0);
+        Assert.Single(s.EliminatedTiers);
+    }
 }

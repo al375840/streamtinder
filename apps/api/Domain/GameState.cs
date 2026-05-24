@@ -124,4 +124,37 @@ public sealed record GameState(
             AciertosByNick = aciertos
         };
     }
+
+    public GameState NextCard(DateTime now)
+    {
+        if (Phase != GamePhase.CardReveal) return this;
+        var nextIdx = CardIndex + 1;
+        if (Pack is null) return this;
+        if (nextIdx >= Pack.Cards.Count)
+            return this with { Phase = GamePhase.TallyTransition, CardTimerEndsAt = null };
+        return this with
+        {
+            Phase = GamePhase.Card,
+            CardIndex = nextIdx,
+            CardTimerEndsAt = now.AddSeconds(CardSeconds),
+            StreamerVote = null,
+            CurrentCardVotes = new Dictionary<string, PlayerVote>()
+        };
+    }
+
+    public GameState EnterCriba()
+    {
+        if (Phase != GamePhase.TallyTransition) return this;
+        return this with { Phase = GamePhase.Criba, EliminatedTiers = Array.Empty<int>() };
+    }
+
+    public GameState EliminateTier(int tier)
+    {
+        if (Phase != GamePhase.Criba) return this;
+        if (tier is < 0 or > 10) return this;
+        if (EliminatedTiers.Contains(tier)) return this;
+        var list = EliminatedTiers.ToList();
+        list.Add(tier);
+        return this with { EliminatedTiers = list };
+    }
 }
