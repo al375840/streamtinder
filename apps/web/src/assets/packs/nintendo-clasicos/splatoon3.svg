@@ -1,0 +1,7 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 360">
+  <rect width="280" height="360" fill="#cc5500"/>
+  <rect x="8" y="8" width="264" height="344" fill="none" stroke="#ccff00" stroke-width="4"/>
+  <text x="140" y="170" font-family="monospace" font-size="64" fill="#ccff00" text-anchor="middle" dominant-baseline="middle">✦</text>
+  <text x="140" y="250" font-family="monospace" font-size="18" fill="#ccff00" text-anchor="middle" font-weight="bold">SPLATOON 3</text>
+  <text x="140" y="278" font-family="monospace" font-size="13" fill="#ccff00" text-anchor="middle" opacity="0.8">SWITCH · 2022</text>
+</svg>
