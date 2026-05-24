@@ -24,7 +24,8 @@ import { GameStateStore } from '../../core/game-state.store';
           <div class="alias">EL STREAMER ELIGIÓ</div>
           <div class="stamp pulse">
             @if (streamerVote() === 'left') { ← IZQ · NO }
-            @else { → DER · SÍ }
+            @else if (streamerVote() === 'right') { → DER · SÍ }
+            @else { PENDIENTE }
           </div>
         </div>
 
@@ -90,7 +91,7 @@ import { GameStateStore } from '../../core/game-state.store';
 export class PhaseCardRevealComponent {
   protected store = inject(GameStateStore);
   protected readonly card = this.store.currentCard;
-  protected readonly streamerVote = computed(() => this.store.state()?.streamerVote ?? 'right');
+  protected readonly streamerVote = computed(() => this.store.state()?.streamerVote ?? null);
   protected readonly matchingVotes = computed(() => {
     const votes = this.store.state()?.currentCardVotes ?? {};
     const sv = this.store.state()?.streamerVote;

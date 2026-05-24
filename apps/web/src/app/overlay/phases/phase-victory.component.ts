@@ -103,7 +103,7 @@ export class PhaseVictoryComponent {
     // Use winners from store if available (server-computed)
     const winners = this.store.winners();
     if (winners.length > 0) {
-      return winners
+      return [...winners]
         .sort((a, b) => b.totalPoints - a.totalPoints)
         .map((w, i) => ({ nick: w.nick, aciertos: w.aciertos, totalPoints: w.totalPoints, rank: i + 1 }));
     }

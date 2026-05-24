@@ -30,7 +30,7 @@ import { SpriteComponent } from '../../ui/sprite/sprite.component';
       <div class="bonus-bar">
         <div class="lbl">SUPERVIVIENTES ACTUALES</div>
         <div class="nums"><strong>{{ survivorCount() }}</strong> · bote 100 pts</div>
-        <div class="bonus-val">+{{ bonusPerSurvivor() }} PTS<small>por superviviente · floor(100/{{ survivorCount() }})</small></div>
+        <div class="bonus-val">+{{ bonusPerSurvivor() }} PTS<small>por superviviente</small></div>
       </div>
     </div>
   `,
@@ -81,10 +81,11 @@ import { SpriteComponent } from '../../ui/sprite/sprite.component';
       gap: 2px; align-content: end; padding: 2px; overflow: hidden;
     }
     .sprite-wrap { display: flex; align-items: center; justify-content: center; }
-    :host ::ng-deep .col.eliminated canvas {
-      animation: column-fall 1.6s steps(8) forwards;
-      animation-delay: inherit;
-    }
+    /* Apply column-fall to .sprite-wrap (in this template) — no ::ng-deep needed */
+    .col.eliminated .sprite-wrap { animation: column-fall 1.6s steps(8) forwards; }
+    .col.eliminated .sprite-wrap:nth-child(2n) { animation-delay: 0.05s; }
+    .col.eliminated .sprite-wrap:nth-child(3n) { animation-delay: 0.10s; }
+    .col.eliminated .sprite-wrap:nth-child(5n) { animation-delay: 0.15s; }
     .bonus-bar {
       position: absolute; left: 40px; right: 40px; bottom: 16px;
       background: var(--c-void); border: 4px solid var(--c-paper);

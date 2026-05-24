@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { SignalRService } from '../core/signalr.service';
-import { GameStateStore } from '../core/game-state.store';
+import { GameStateStore, GameStateDto, GameWinnerDto } from '../core/game-state.store';
 import { PhaseIdleComponent } from './phases/phase-idle.component';
 import { PhaseLobbyComponent } from './phases/phase-lobby.component';
 import { PhaseCardComponent } from './phases/phase-card.component';
@@ -24,11 +24,11 @@ import { PhaseVictoryComponent } from './phases/phase-victory.component';
           <span class="heart"></span>
           <span>{{ store.state()?.pack?.name ?? 'STREAMER TINDER' }}</span>
         </div>
-        <div class="ov-question" [style.opacity]="showQuestion() ? 1 : 0.35">
+        <div class="ov-question" [style.opacity]="showCardUi() ? 1 : 0.35">
           {{ store.state()?.pack?.question ?? '' }}
         </div>
         <div class="ov-stats">
-          @if (showCardCounter()) {
+          @if (showCardUi()) {
             <div class="card-counter">
               {{ phase() === 'victory' ? 'PARTIDA · ' + totalCards() + '/' + totalCards() : 'CARTA ' + (cardIndex() + 1) + ' / ' + totalCards() }}
             </div>
@@ -146,11 +146,7 @@ export class OverlayComponent implements OnInit {
   protected readonly phase = this.store.phase;
   protected readonly cardIndex = computed(() => this.store.state()?.cardIndex ?? 0);
   protected readonly totalCards = computed(() => this.store.state()?.pack?.cards.length ?? 10);
-  protected readonly showCardCounter = computed(() => {
-    const p = this.phase();
-    return p !== 'idle' && p !== 'lobby';
-  });
-  protected readonly showQuestion = computed(() => {
+  protected readonly showCardUi = computed(() => {
     const p = this.phase();
     return p !== 'idle' && p !== 'lobby';
   });
@@ -171,9 +167,11 @@ export class OverlayComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    // SignalR delivers unknown — cast to the DTOs we know the hub sends.
+    // Full runtime validation (Zod) is not warranted for this use-case.
     await this.sr.connect(
-      (s) => this.store.state.set(s as any),
-      (w) => this.store.winners.set(w as any)
+      (s) => this.store.state.set(s as GameStateDto | null),
+      (w) => this.store.winners.set(w as GameWinnerDto[])
     );
   }
 }
