@@ -13,10 +13,10 @@ import { SignalRService } from '../../core/signalr.service';
 
       <div class="lobby-actions">
         <button class="btn-primary" (click)="startGame()"
-                [disabled]="store.lobbyPlayers().length < 10 || busy()">
+                [disabled]="store.lobbyPlayers().length < 1 || busy()">
           ▶ INICIAR PARTIDA
-          @if (store.lobbyPlayers().length < 10) {
-            <small>(mínimo 10 jugadores)</small>
+          @if (store.lobbyPlayers().length < 1) {
+            <small>(mínimo 1 jugador)</small>
           }
         </button>
 
