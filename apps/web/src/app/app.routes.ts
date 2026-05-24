@@ -13,5 +13,9 @@ export const routes: Routes = [
   {
     path: 'leaderboard',
     loadComponent: () => import('./leaderboard/leaderboard.component').then(m => m.LeaderboardComponent)
+  },
+  {
+    path: 'packs',
+    loadComponent: () => import('./packs-preview/packs-preview.component').then(m => m.PacksPreviewComponent)
   }
 ];

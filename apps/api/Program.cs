@@ -59,6 +59,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/api/packs", (PackRepository packs) => Results.Ok(packs.GetAll()));
 
 app.MapLeaderboard();
 
