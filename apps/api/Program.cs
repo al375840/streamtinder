@@ -28,6 +28,8 @@ builder.Services.AddSingleton(sp =>
 
 builder.Services.AddSingleton<IGameStatePublisher, NoopPublisher>();
 builder.Services.AddSingleton<GameOrchestrator>();
+builder.Services.AddSingleton<ChatCommandParser>();
+builder.Services.AddHostedService<TwitchChatService>();
 
 var app = builder.Build();
 
