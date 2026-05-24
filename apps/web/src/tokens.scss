@@ -1,0 +1,239 @@
+/* ============================================================
+   STREAMER TINDER — design tokens
+   Pixel art retro 8-bit · NES-inspired · No gradients · No blur
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+  /* === BASE PALETTE (32 colors) =========================== */
+  /* Voids & paper */
+  --c-void:        #0a0612;   /* deepest background */
+  --c-night:       #1a1428;   /* primary bg */
+  --c-dusk:        #2c2440;   /* panel bg */
+  --c-stone:       #4a3a6a;   /* dividers, low-priority text */
+  --c-ash:         #7a6a99;   /* secondary text */
+  --c-bone:        #d9d2e8;   /* primary text on dark */
+  --c-paper:       #f6f0ff;   /* highlight / win text */
+  --c-pure:        #ffffff;
+
+  /* Brand accents — Tinder-ish but pixel */
+  --c-flame:       #ff3c8b;   /* PRIMARY accent — like / yes / heart */
+  --c-flame-dk:    #b81e63;
+  --c-ice:         #4ad4d4;   /* SECONDARY — info / cool / vote-no */
+  --c-ice-dk:      #1f7a8a;
+
+  /* Status / tiers */
+  --c-gold:        #ffd33d;   /* winner tier, leaderboard #1, streamer-voted pulse */
+  --c-gold-dk:     #b8860b;
+  --c-silver:      #b8c4d4;   /* #2 */
+  --c-bronze:      #c97a3a;   /* #3 */
+
+  /* Alerts */
+  --c-danger:      #ff5b5b;   /* eliminated, criba falling, emergency button */
+  --c-danger-dk:   #8a1f1f;
+  --c-warn:        #ff9b3d;   /* warnings, vote-closing imminent */
+  --c-success:     #5fde6f;   /* confirmation, winner column */
+  --c-success-dk:  #1f7a3a;
+
+  /* Body colors (8 used by deterministic sprite hash) */
+  --c-body-1:      #ff3c8b;   /* pink */
+  --c-body-2:      #4ad4d4;   /* cyan */
+  --c-body-3:      #5fde6f;   /* green */
+  --c-body-4:      #ffd33d;   /* yellow */
+  --c-body-5:      #c97aff;   /* purple */
+  --c-body-6:      #ff8a3d;   /* orange */
+  --c-body-7:      #6a8aff;   /* blue */
+  --c-body-8:      #ffffff;   /* white */
+
+  /* Skin tones (4) */
+  --c-skin-1:      #ffd5b0;
+  --c-skin-2:      #e8a878;
+  --c-skin-3:      #a06a3a;
+  --c-skin-4:      #5a3a1f;
+
+  /* Hair tones (6) */
+  --c-hair-1:      #2a1810;   /* black */
+  --c-hair-2:      #6b3a1a;   /* brown */
+  --c-hair-3:      #d4a23d;   /* blonde */
+  --c-hair-4:      #b8341f;   /* red */
+  --c-hair-5:      #4a4a6a;   /* grey */
+  --c-hair-6:      #ff3c8b;   /* anime pink */
+
+  /* === TYPOGRAPHY ========================================= */
+  --font-title: 'Press Start 2P', monospace;
+  --font-body:  'VT323', monospace;
+
+  --fs-mega:   48px;   /* hero / victory screen */
+  --fs-xl:     32px;   /* phase titles */
+  --fs-lg:     24px;   /* card titles */
+  --fs-md:     16px;   /* PS2P body */
+  --fs-sm:     12px;   /* PS2P captions */
+  --fs-xs:     8px;    /* PS2P tiny labels */
+  --fs-body-lg: 28px;  /* VT323 readable */
+  --fs-body:    22px;  /* VT323 default */
+  --fs-body-sm: 18px;  /* VT323 caption */
+
+  /* === PIXEL GRID ========================================= */
+  --px:        1px;          /* native pixel — DON'T scale */
+  --u:         8px;          /* base unit (8x8 grid) */
+  --u-half:    4px;
+  --u2:        16px;
+  --u3:        24px;
+  --u4:        32px;
+  --u5:        40px;
+  --u6:        48px;
+  --u8:        64px;
+
+  /* Sprite scale */
+  --scale:     3;            /* 24x30 → 72x90 default in overlay */
+  --sprite-w:  72px;
+  --sprite-h:  90px;
+
+  /* === BORDERS / SHADOWS (stepped, no blur) =============== */
+  --border-1: 2px;
+  --border-2: 4px;
+  --border-3: 6px;
+
+  /* Stepped drop shadow — 3px down-right block, no blur */
+  --shadow-pixel:
+    3px 0 0 var(--c-void),
+    0 3px 0 var(--c-void),
+    3px 3px 0 var(--c-void);
+
+  --shadow-pixel-lg:
+    6px 0 0 var(--c-void),
+    0 6px 0 var(--c-void),
+    6px 6px 0 var(--c-void);
+
+  /* Inset bevel — light top-left, dark bottom-right */
+  --bevel-up:
+    inset 3px 3px 0 0 rgba(255,255,255,.25),
+    inset -3px -3px 0 0 rgba(0,0,0,.45);
+
+  --bevel-down:
+    inset -3px -3px 0 0 rgba(255,255,255,.25),
+    inset 3px 3px 0 0 rgba(0,0,0,.45);
+}
+
+/* === RESET / GLOBAL ====================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+html, body {
+  background: var(--c-night);
+  color: var(--c-bone);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.2;
+  -webkit-font-smoothing: none;
+  font-smoothing: none;
+  text-rendering: geometricPrecision;
+}
+
+canvas { image-rendering: pixelated; }
+
+button {
+  font-family: var(--font-title);
+  font-size: var(--fs-sm);
+  background: var(--c-dusk);
+  color: var(--c-bone);
+  border: var(--border-1) solid var(--c-bone);
+  padding: var(--u) var(--u2);
+  cursor: pointer;
+  box-shadow: var(--shadow-pixel);
+  transition: none;
+  letter-spacing: 1px;
+}
+button:hover { background: var(--c-stone); color: var(--c-paper); }
+button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--c-void); }
+
+a { color: var(--c-flame); text-decoration: none; }
+a:hover { color: var(--c-paper); background: var(--c-flame); }
+
+h1, h2, h3, h4 { font-family: var(--font-title); font-weight: normal; color: var(--c-paper); }
+h1 { font-size: var(--fs-xl); }
+h2 { font-size: var(--fs-lg); }
+h3 { font-size: var(--fs-md); }
+h4 { font-size: var(--fs-sm); }
+
+/* === UTILITY ============================================ */
+.pixel-frame {
+  background: var(--c-dusk);
+  border: var(--border-2) solid var(--c-bone);
+  box-shadow: var(--shadow-pixel-lg);
+  padding: var(--u3);
+}
+
+.pixel-panel {
+  background: var(--c-dusk);
+  border: var(--border-1) solid var(--c-stone);
+  padding: var(--u2);
+}
+
+.pixel-tag {
+  display: inline-block;
+  font-family: var(--font-title);
+  font-size: var(--fs-xs);
+  padding: 4px 6px;
+  background: var(--c-flame);
+  color: var(--c-void);
+  letter-spacing: 1px;
+}
+
+/* CRT scanlines — subtle, optional via .scanlines class */
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(0,0,0,.18) 2px,
+    rgba(0,0,0,.18) 3px
+  );
+  z-index: 9999;
+}
+
+/* No-easing animation primitives — steps only */
+@keyframes pixel-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes pixel-pulse {
+  0%, 49%   { transform: translate(0, 0) scale(1); }
+  50%, 100% { transform: translate(0, -3px) scale(1); }
+}
+@keyframes pixel-bob {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-3px); }
+  50%  { transform: translateY(0); }
+  75%  { transform: translateY(3px); }
+  100% { transform: translateY(0); }
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px); }
+  100% { transform: translateY(740px); }
+}
+@keyframes column-fall {
+  0%   { transform: translateY(0) rotate(0); opacity: 1; }
+  20%  { transform: translateY(20px) rotate(2deg); opacity: 1; }
+  60%  { transform: translateY(200px) rotate(6deg); opacity: 1; }
+  100% { transform: translateY(800px) rotate(15deg); opacity: 0; }
+}
+
+/* Step animation utilities */
+.blink     { animation: pixel-blink 0.8s step-end infinite; }
+.blink-2s  { animation: pixel-blink 2s step-end infinite; }
+.pulse     { animation: pixel-pulse 0.6s step-end infinite; }
+.bob       { animation: pixel-bob 0.8s steps(4) infinite; }

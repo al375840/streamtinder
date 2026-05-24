@@ -1,1 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
+// Global entry point — pixel rendering + design tokens
+// Reset, typography and CSS custom properties live in tokens.scss
+@import './tokens';
+
+// Additional global overrides (complement tokens.scss reset)
+* {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+html, body {
+  min-height: 100vh;
+}
+
+button {
+  font-family: var(--font-title);
+  cursor: pointer;
+}
