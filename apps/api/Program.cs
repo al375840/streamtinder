@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using StreamerTinder.Api.Endpoints;
 using StreamerTinder.Api.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,8 @@ app.UseStaticFiles();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapGet("/streamer", () => Results.Ok("panel ok"));
+
+app.MapLeaderboard();
 
 app.MapFallbackToFile("index.html");
 
