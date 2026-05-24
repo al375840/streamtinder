@@ -1,27 +1,20 @@
 import { Component, Input, inject, OnChanges, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GameStateStore, PackDto } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
+const DEFAULT_PACK = 'nintendo-clasicos';
+
 @Component({
   selector: 'controls-idle',
   standalone: true,
-  imports: [FormsModule],
+  imports: [],
   template: `
     <div class="ctrl-idle">
       <h2>ABRIR LOBBY</h2>
+      <p class="hint">Puedes cambiar el pack una vez el lobby esté abierto.</p>
 
-      <div class="form-row">
-        <label>PACK</label>
-        <select [(ngModel)]="selectedPackId">
-          @for (p of packs; track p.id) {
-            <option [value]="p.id">{{ p.name }}</option>
-          }
-        </select>
-      </div>
-
-      <button class="btn-primary" (click)="openLobby()" [disabled]="!selectedPackId">
+      <button class="btn-primary" (click)="openLobby()" [disabled]="!defaultPackId || busy">
         ▶ ABRIR LOBBY
       </button>
 
@@ -32,17 +25,8 @@ import { SignalRService } from '../../core/signalr.service';
   `,
   styles: [`
     .ctrl-idle { display: flex; flex-direction: column; gap: var(--u3); }
-    h2 { font-size: var(--fs-lg); color: var(--c-paper); margin-bottom: var(--u); }
-    .form-row { display: flex; flex-direction: column; gap: var(--u-half); }
-    label { font-size: var(--fs-xs); color: var(--c-ash); letter-spacing: 1px; }
-    select {
-      font-family: var(--font-title); font-size: var(--fs-sm);
-      background: var(--c-dusk); color: var(--c-bone);
-      border: 2px solid var(--c-stone);
-      padding: var(--u) var(--u2);
-      width: 100%; max-width: 400px;
-    }
-    select:focus { outline: none; border-color: var(--c-flame); }
+    h2 { font-size: var(--fs-lg); color: var(--c-paper); margin-bottom: 0; }
+    .hint { font-family: var(--font-body); font-size: var(--fs-body-sm); color: var(--c-ash); margin: 0; }
     .btn-primary {
       font-family: var(--font-title); font-size: var(--fs-sm);
       background: var(--c-flame); color: var(--c-void);
@@ -60,38 +44,41 @@ export class ControlsIdleComponent implements OnInit, OnChanges {
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   private route = inject(ActivatedRoute);
-  protected selectedPackId = '';
+  protected defaultPackId = '';
+  protected busy = false;
   protected errorMsg = '';
 
   // Set when ?pack comes from URL → auto-open once packs arrive
+  private _urlPack = '';
   private _pendingAutoOpen = false;
 
   ngOnInit(): void {
-    const packParam = this.route.snapshot.queryParamMap.get('pack');
-    if (packParam) {
-      this.selectedPackId = packParam;
-      this._pendingAutoOpen = true;
-    }
+    this._urlPack = this.route.snapshot.queryParamMap.get('pack') ?? '';
+    if (this._urlPack) this._pendingAutoOpen = true;
   }
 
   ngOnChanges(): void {
-    if (this.packs.length > 0 && !this.selectedPackId) {
-      this.selectedPackId = this.packs[0].id;
-    }
-    if (this._pendingAutoOpen && this.selectedPackId) {
+    if (!this.packs.length) return;
+    // Priority: URL param > nintendo-clasicos > first pack
+    const preferred = this._urlPack || DEFAULT_PACK;
+    this.defaultPackId = this.packs.find(p => p.id === preferred)?.id ?? this.packs[0].id;
+
+    if (this._pendingAutoOpen && this.defaultPackId) {
       this._pendingAutoOpen = false;
       this.openLobby();
     }
   }
 
   protected async openLobby(): Promise<void> {
-    if (!this.selectedPackId) return;
+    if (!this.defaultPackId || this.busy) return;
+    this.busy = true;
     this.errorMsg = '';
     try {
-      // Nick is read server-side from Twitch:Channel config — we only send the pack.
-      await this.sr.invoke('OpenLobby', this.selectedPackId);
+      await this.sr.invoke('OpenLobby', this.defaultPackId);
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al abrir lobby';
+    } finally {
+      this.busy = false;
     }
   }
 }

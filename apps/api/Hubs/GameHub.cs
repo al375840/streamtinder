@@ -41,6 +41,13 @@ public sealed class GameHub : Hub
         await _orch.OpenLobbyAsync(pack, _streamerChannel, db);
     }
 
+    public async Task ChangePack(string packId)
+    {
+        var pack = _packs.GetById(packId);
+        if (pack is null) return;
+        await _orch.ChangePackAsync(pack);
+    }
+
     public Task StartGame() => _orch.StartGameAsync();
 
     public Task StreamerVote(string direction) =>

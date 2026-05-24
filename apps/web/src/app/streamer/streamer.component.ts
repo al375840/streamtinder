@@ -45,7 +45,7 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
 
         @switch (store.phase()) {
           @case ('idle')            { <controls-idle [packs]="packs()" /> }
-          @case ('lobby')           { <controls-lobby /> }
+          @case ('lobby')           { <controls-lobby [packs]="packs()" /> }
           @case ('card')            { <controls-card /> }
           @case ('cardReveal')      { <controls-card-reveal /> }
           @case ('tallyTransition') { <controls-criba /> }

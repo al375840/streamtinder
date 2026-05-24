@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { GameStateStore } from '../../core/game-state.store';
+import { GameStateStore, PackDto } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
 @Component({
@@ -9,6 +9,15 @@ import { SignalRService } from '../../core/signalr.service';
   imports: [FormsModule],
   template: `
     <div class="ctrl-lobby">
+      <div class="pack-row">
+        <label>PACK</label>
+        <select [(ngModel)]="selectedPackId" (ngModelChange)="changePack($event)">
+          @for (p of packs; track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+          }
+        </select>
+      </div>
+
       <h2>LOBBY · {{ store.lobbyPlayers().length }} / 60</h2>
 
       <div class="lobby-actions">
@@ -50,6 +59,14 @@ import { SignalRService } from '../../core/signalr.service';
   `,
   styles: [`
     .ctrl-lobby { display: flex; flex-direction: column; gap: var(--u3); }
+    .pack-row { display: flex; flex-direction: column; gap: var(--u-half); }
+    select {
+      font-family: var(--font-title); font-size: var(--fs-sm);
+      background: var(--c-dusk); color: var(--c-bone);
+      border: 2px solid var(--c-stone); padding: var(--u) var(--u2);
+      width: 100%; max-width: 400px;
+    }
+    select:focus { outline: none; border-color: var(--c-flame); }
     h2 { font-size: var(--fs-lg); color: var(--c-paper); }
     .lobby-actions { display: flex; gap: var(--u2); flex-wrap: wrap; }
     .btn-primary {
@@ -110,14 +127,34 @@ import { SignalRService } from '../../core/signalr.service';
     .btn-mini-ban:disabled { opacity: 0.4; cursor: not-allowed; }
   `]
 })
-export class ControlsLobbyComponent {
+export class ControlsLobbyComponent implements OnChanges {
+  @Input() packs: PackDto[] = [];
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
+  protected selectedPackId = '';
   protected banNick = '';
   protected banMsg = '';
   protected busy = signal(false);
   protected banBusy = signal('');
   protected errorMsg = '';
+
+  ngOnChanges(): void {
+    // Sync selector with current game state pack (set on first load)
+    if (!this.selectedPackId && this.store.state()?.pack?.id) {
+      this.selectedPackId = this.store.state()!.pack!.id;
+    }
+    if (!this.selectedPackId && this.packs.length) {
+      this.selectedPackId = this.packs[0].id;
+    }
+  }
+
+  protected async changePack(packId: string): Promise<void> {
+    try {
+      await this.sr.invoke('ChangePack', packId);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al cambiar pack';
+    }
+  }
 
   protected async startGame(): Promise<void> {
     if (this.busy()) return;

@@ -48,6 +48,18 @@ public sealed class GameOrchestrator
         finally { _lock.Release(); }
     }
 
+    public async Task ChangePackAsync(Pack newPack, CancellationToken ct = default)
+    {
+        await _lock.WaitAsync(ct);
+        try
+        {
+            if (_state.Phase != GamePhase.Lobby) return;
+            _state = _state with { Pack = newPack };
+            await _pub.PublishStateAsync(_state, ct);
+        }
+        finally { _lock.Release(); }
+    }
+
     public async Task HandleViewerCommandAsync(string nick, ChatCommand cmd, AppDbContext db, CancellationToken ct = default)
     {
         await _lock.WaitAsync(ct);
