@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install web deps
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build Angular
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Restore .NET
+        run: dotnet restore StreamerTinder.sln
+
+      - name: Build .NET
+        run: dotnet build StreamerTinder.sln --no-restore -c Release
+
+      - name: Test .NET
+        run: dotnet test StreamerTinder.sln --no-build -c Release --logger "console;verbosity=normal"
