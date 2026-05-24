@@ -1,0 +1,18 @@
+{
+  "id": "eeveelutions",
+  "name": "Eeveeluciones",
+  "question": "¿Es tu favorita?",
+  "palettePrimary": "#C8934A",
+  "paletteAccent": "#F5E6C8",
+  "cards": [
+    { "id": "eevee",    "imagePath": "/assets/packs/eeveelutions/eevee.png",    "subtitle": "Eevee · #133" },
+    { "id": "vaporeon", "imagePath": "/assets/packs/eeveelutions/vaporeon.png", "subtitle": "Vaporeon · #134" },
+    { "id": "jolteon",  "imagePath": "/assets/packs/eeveelutions/jolteon.png",  "subtitle": "Jolteon · #135" },
+    { "id": "flareon",  "imagePath": "/assets/packs/eeveelutions/flareon.png",  "subtitle": "Flareon · #136" },
+    { "id": "espeon",   "imagePath": "/assets/packs/eeveelutions/espeon.png",   "subtitle": "Espeon · #196" },
+    { "id": "umbreon",  "imagePath": "/assets/packs/eeveelutions/umbreon.png",  "subtitle": "Umbreon · #197" },
+    { "id": "leafeon",  "imagePath": "/assets/packs/eeveelutions/leafeon.png",  "subtitle": "Leafeon · #470" },
+    { "id": "glaceon",  "imagePath": "/assets/packs/eeveelutions/glaceon.png",  "subtitle": "Glaceon · #471" },
+    { "id": "sylveon",  "imagePath": "/assets/packs/eeveelutions/sylveon.png",  "subtitle": "Sylveon · #700" }
+  ]
+}
