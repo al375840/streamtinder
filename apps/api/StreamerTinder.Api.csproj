@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="StreamerTinder.Api.Tests" />
+  </ItemGroup>
+
 </Project>

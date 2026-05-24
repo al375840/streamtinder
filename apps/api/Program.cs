@@ -11,11 +11,15 @@ builder.Services.Configure<DatabaseOptions>(
 
 var app = builder.Build();
 
+app.UseMiddleware<BasicAuthMiddleware>();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/streamer", () => Results.Ok("panel ok"));
 
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+public partial class Program { }
