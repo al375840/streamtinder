@@ -93,7 +93,7 @@ import { GameStateStore } from '../../core/game-state.store';
       margin-bottom: var(--u);
       color: var(--c-bone); font-family: var(--font-title); font-size: 12px;
     }
-    .card-image img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; }
+    .card-image img { width: 70%; height: 70%; object-fit: contain; }
     .card-name {
       font-family: var(--font-title); font-size: 28px;
       color: var(--c-void); text-align: center; padding: var(--u);
