@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 
@@ -34,7 +35,7 @@ public sealed class BasicAuthMiddleware
             {
                 var user = raw[..sep];
                 var pass = raw[(sep + 1)..];
-                if (user == _opts.User && pass == _opts.Pass)
+                if (FixedTimeEquals(user, _opts.User) && FixedTimeEquals(pass, _opts.Pass))
                 {
                     await _next(ctx);
                     return;
@@ -45,5 +46,12 @@ public sealed class BasicAuthMiddleware
         ctx.Response.StatusCode = 401;
         ctx.Response.Headers.WWWAuthenticate = "Basic realm=\"Streamer Tinder\"";
         await ctx.Response.WriteAsync("Unauthorized");
+    }
+
+    private static bool FixedTimeEquals(string a, string b)
+    {
+        var bytesA = Encoding.UTF8.GetBytes(a);
+        var bytesB = Encoding.UTF8.GetBytes(b);
+        return CryptographicOperations.FixedTimeEquals(bytesA, bytesB);
     }
 }
