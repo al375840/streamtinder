@@ -52,7 +52,6 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-app.MapGet("/streamer", () => Results.Ok("panel ok"));
 
 app.MapLeaderboard();
 
