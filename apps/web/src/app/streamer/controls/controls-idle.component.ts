@@ -1,7 +1,10 @@
-import { Component, Input, inject, OnChanges } from '@angular/core';
+import { Component, Input, inject, OnChanges, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { GameStateStore, PackDto } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
+
+const NICK_KEY = 'streamerNick';
 
 @Component({
   selector: 'controls-idle',
@@ -61,17 +64,38 @@ import { SignalRService } from '../../core/signalr.service';
     .error { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
   `]
 })
-export class ControlsIdleComponent implements OnChanges {
+export class ControlsIdleComponent implements OnInit, OnChanges {
   @Input() packs: PackDto[] = [];
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
+  private route = inject(ActivatedRoute);
   protected selectedPackId = '';
   protected streamerNick = '';
   protected errorMsg = '';
 
+  // Set when both ?nick and ?pack come from URL → auto-open once packs arrive
+  private _pendingAutoOpen = false;
+
+  ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const nickParam = params.get('nick');
+    const packParam = params.get('pack');
+
+    // Nick: URL param > localStorage > empty
+    this.streamerNick = nickParam ?? localStorage.getItem(NICK_KEY) ?? '';
+    if (packParam) this.selectedPackId = packParam;
+
+    // Auto-open only when BOTH come from URL (streamer bookmarked the full link)
+    if (nickParam && packParam) this._pendingAutoOpen = true;
+  }
+
   ngOnChanges(): void {
     if (this.packs.length > 0 && !this.selectedPackId) {
       this.selectedPackId = this.packs[0].id;
+    }
+    if (this._pendingAutoOpen && this.canOpen()) {
+      this._pendingAutoOpen = false;
+      this.openLobby();
     }
   }
 
@@ -83,8 +107,10 @@ export class ControlsIdleComponent implements OnChanges {
     if (!this.canOpen()) return;
     this.errorMsg = '';
     try {
-      await this.sr.invoke('OpenLobby', this.selectedPackId, this.streamerNick.trim());
-      this.store.streamerNick.set(this.streamerNick.trim());
+      const nick = this.streamerNick.trim();
+      await this.sr.invoke('OpenLobby', this.selectedPackId, nick);
+      localStorage.setItem(NICK_KEY, nick);
+      this.store.streamerNick.set(nick);
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al abrir lobby';
     }
