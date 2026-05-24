@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StreamerTinder.Api.Endpoints;
+using StreamerTinder.Api.Hubs;
 using StreamerTinder.Api.Infrastructure;
 using StreamerTinder.Api.Services;
 
@@ -26,7 +27,11 @@ builder.Services.AddSingleton(sp =>
     return repo;
 });
 
-builder.Services.AddSingleton<IGameStatePublisher, NoopPublisher>();
+builder.Services.AddSignalR().AddJsonProtocol(opts =>
+{
+    opts.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
+builder.Services.AddSingleton<IGameStatePublisher, SignalRGamePublisher>();
 builder.Services.AddSingleton<GameOrchestrator>();
 builder.Services.AddSingleton<ChatCommandParser>();
 builder.Services.AddHostedService<TwitchChatService>();
@@ -50,6 +55,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapGet("/streamer", () => Results.Ok("panel ok"));
 
 app.MapLeaderboard();
+
+app.MapHub<GameHub>("/hubs/game");
 
 app.MapFallbackToFile("index.html");
 
