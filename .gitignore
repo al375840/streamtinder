@@ -98,6 +98,8 @@ _ReSharper*/
 node_modules/
 dist/
 .angular/
+# Angular build output served as .NET static files — regenerated on build
+apps/api/wwwroot/
 .cache/
 npm-debug.log*
 yarn-debug.log*
