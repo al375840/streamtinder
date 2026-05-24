@@ -72,4 +72,21 @@ public sealed record GameState(
             LobbyCountdownEndsAt = now.AddSeconds(LobbySeconds)
         };
     }
+
+    public GameState StartGame(DateTime now)
+    {
+        if (Phase != GamePhase.Lobby)
+            throw new InvalidOperationException($"Cannot start from {Phase}");
+        if (LobbyPlayers.Count < LobbyMin)
+            throw new InvalidOperationException($"Need at least {LobbyMin} players");
+        return this with
+        {
+            Phase = GamePhase.Card,
+            CardIndex = 0,
+            CardTimerEndsAt = now.AddSeconds(CardSeconds),
+            StreamerVote = null,
+            CurrentCardVotes = new Dictionary<string, PlayerVote>(),
+            AciertosByNick = LobbyPlayers.ToDictionary(p => p.Nick, _ => 0)
+        };
+    }
 }

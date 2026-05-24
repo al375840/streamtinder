@@ -97,4 +97,26 @@ public class GameStateTests
         Assert.Empty(s2.LobbyPlayers);
         Assert.Equal(GamePhase.Idle, s2.Phase);
     }
+
+    [Fact]
+    public void StartGame_requires_min_10_players()
+    {
+        var s = GameState.New().OpenLobby(TestPack(), DateTime.UtcNow);
+        for (int i = 0; i < 9; i++) s = s.Join($"u{i}", DateTime.UtcNow, false);
+        Assert.Throws<InvalidOperationException>(() => s.StartGame(DateTime.UtcNow));
+    }
+
+    [Fact]
+    public void StartGame_transitions_to_card_phase_with_first_card_active()
+    {
+        var s = GameState.New().OpenLobby(TestPack(), DateTime.UtcNow);
+        for (int i = 0; i < 10; i++) s = s.Join($"u{i}", DateTime.UtcNow, false);
+        var now = DateTime.UtcNow;
+        s = s.StartGame(now);
+        Assert.Equal(GamePhase.Card, s.Phase);
+        Assert.Equal(0, s.CardIndex);
+        Assert.Equal(now.AddSeconds(GameState.CardSeconds), s.CardTimerEndsAt);
+        Assert.Empty(s.CurrentCardVotes);
+        Assert.Null(s.StreamerVote);
+    }
 }
