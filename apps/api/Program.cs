@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using StreamerTinder.Api.Endpoints;
 using StreamerTinder.Api.Infrastructure;
+using StreamerTinder.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,13 @@ Directory.CreateDirectory(Path.GetDirectoryName(dbFull)!);
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite($"Data Source={dbFull}"));
+
+builder.Services.AddSingleton(sp =>
+{
+    var repo = new PackRepository(AppContext.BaseDirectory);
+    repo.LoadAllAsync().GetAwaiter().GetResult();
+    return repo;
+});
 
 var app = builder.Build();
 

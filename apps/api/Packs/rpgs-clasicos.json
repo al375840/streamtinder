@@ -1,0 +1,19 @@
+{
+  "id": "rpgs-clasicos",
+  "name": "RPGs Clásicos",
+  "question": "¿Lo has jugado entero?",
+  "palettePrimary": "#c97aff",
+  "paletteAccent": "#5fde6f",
+  "cards": [
+    { "id": "ffvii",     "imagePath": "/assets/packs/rpgs-clasicos/ffvii.png",     "subtitle": "Final Fantasy VII" },
+    { "id": "chrono",    "imagePath": "/assets/packs/rpgs-clasicos/chrono.png",    "subtitle": "Chrono Trigger" },
+    { "id": "earthbound","imagePath": "/assets/packs/rpgs-clasicos/earthbound.png","subtitle": "EarthBound" },
+    { "id": "secret",    "imagePath": "/assets/packs/rpgs-clasicos/secret.png",    "subtitle": "Secret of Mana" },
+    { "id": "tactics",   "imagePath": "/assets/packs/rpgs-clasicos/tactics.png",   "subtitle": "Final Fantasy Tactics" },
+    { "id": "lufia",     "imagePath": "/assets/packs/rpgs-clasicos/lufia.png",     "subtitle": "Lufia II" },
+    { "id": "phantasy",  "imagePath": "/assets/packs/rpgs-clasicos/phantasy.png",  "subtitle": "Phantasy Star IV" },
+    { "id": "suikoden",  "imagePath": "/assets/packs/rpgs-clasicos/suikoden.png",  "subtitle": "Suikoden II" },
+    { "id": "xenogears", "imagePath": "/assets/packs/rpgs-clasicos/xenogears.png", "subtitle": "Xenogears" },
+    { "id": "ogre",      "imagePath": "/assets/packs/rpgs-clasicos/ogre.png",      "subtitle": "Tactics Ogre" }
+  ]
+}
