@@ -31,9 +31,19 @@ public sealed class GameOrchestrator
         {
             _streamerUsername = streamer;
             _bansCache = (await db.Bans.Select(b => b.TwitchUsername).ToListAsync(ct)).ToHashSet();
+            var previous = _state;
             _state = _state.OpenLobby(pack, DateTime.UtcNow);
             _currentGameId = Guid.NewGuid();
-            await _pub.PublishStateAsync(_state, ct);
+            try
+            {
+                await _pub.PublishStateAsync(_state, ct);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "PublishStateAsync failed after OpenLobby — rolling back state");
+                _state = previous;
+                throw;
+            }
         }
         finally { _lock.Release(); }
     }

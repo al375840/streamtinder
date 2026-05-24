@@ -27,7 +27,10 @@ builder.Services.AddSingleton(sp =>
     return repo;
 });
 
-builder.Services.AddSignalR().AddJsonProtocol(opts =>
+builder.Services.AddSignalR(hubOpts =>
+{
+    hubOpts.EnableDetailedErrors = true; // TODO: disable after diagnosing the PublishState failure
+}).AddJsonProtocol(opts =>
 {
     opts.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
