@@ -26,6 +26,9 @@ builder.Services.AddSingleton(sp =>
     return repo;
 });
 
+builder.Services.AddSingleton<IGameStatePublisher, NoopPublisher>();
+builder.Services.AddSingleton<GameOrchestrator>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
