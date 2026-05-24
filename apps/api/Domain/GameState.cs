@@ -33,7 +33,7 @@ public sealed record GameState(
 
     public GameState OpenLobby(Pack pack, DateTime now)
     {
-        if (Phase != GamePhase.Idle)
+        if (Phase != GamePhase.Idle && Phase != GamePhase.Victory)
             throw new InvalidOperationException($"Cannot open lobby from {Phase}");
         return this with
         {
