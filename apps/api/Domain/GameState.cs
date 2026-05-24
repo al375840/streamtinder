@@ -89,4 +89,39 @@ public sealed record GameState(
             AciertosByNick = LobbyPlayers.ToDictionary(p => p.Nick, _ => 0)
         };
     }
+
+    public GameState StreamerVotes(VoteDirection dir)
+    {
+        if (Phase != GamePhase.Card) return this;
+        return this with { StreamerVote = dir };
+    }
+
+    public GameState ViewerVotes(string nick, VoteDirection dir, DateTime now)
+    {
+        if (Phase != GamePhase.Card) return this;
+        if (!AciertosByNick.ContainsKey(nick)) return this;
+        if (CurrentCardVotes.ContainsKey(nick)) return this;
+        var dict = new Dictionary<string, PlayerVote>(CurrentCardVotes)
+        {
+            [nick] = new PlayerVote(nick, dir, now)
+        };
+        return this with { CurrentCardVotes = dict };
+    }
+
+    public GameState CloseCard()
+    {
+        if (Phase != GamePhase.Card) return this;
+        var aciertos = new Dictionary<string, int>(AciertosByNick);
+        if (StreamerVote is { } sv)
+        {
+            foreach (var (nick, vote) in CurrentCardVotes)
+                if (vote.Direction == sv)
+                    aciertos[nick]++;
+        }
+        return this with
+        {
+            Phase = GamePhase.CardReveal,
+            AciertosByNick = aciertos
+        };
+    }
 }

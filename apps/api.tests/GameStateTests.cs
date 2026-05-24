@@ -119,4 +119,58 @@ public class GameStateTests
         Assert.Empty(s.CurrentCardVotes);
         Assert.Null(s.StreamerVote);
     }
+
+    private GameState StartedGame(int players = 10)
+    {
+        var s = GameState.New().OpenLobby(TestPack(), DateTime.UtcNow);
+        for (int i = 0; i < players; i++) s = s.Join($"u{i}", DateTime.UtcNow, false);
+        return s.StartGame(DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void StreamerVotes_records_vote()
+    {
+        var s = StartedGame().StreamerVotes(VoteDirection.Right);
+        Assert.Equal(VoteDirection.Right, s.StreamerVote);
+    }
+
+    [Fact]
+    public void ViewerVotes_records_first_vote_only()
+    {
+        var s = StartedGame()
+            .ViewerVotes("u1", VoteDirection.Left, DateTime.UtcNow)
+            .ViewerVotes("u1", VoteDirection.Right, DateTime.UtcNow);
+        Assert.Single(s.CurrentCardVotes);
+        Assert.Equal(VoteDirection.Left, s.CurrentCardVotes["u1"].Direction);
+    }
+
+    [Fact]
+    public void ViewerVotes_only_counts_for_players_in_lobby()
+    {
+        var s = StartedGame().ViewerVotes("non-player", VoteDirection.Left, DateTime.UtcNow);
+        Assert.Empty(s.CurrentCardVotes);
+    }
+
+    [Fact]
+    public void CloseCard_resolves_aciertos_for_matching_votes()
+    {
+        var s = StartedGame();
+        s = s.StreamerVotes(VoteDirection.Right);
+        s = s.ViewerVotes("u0", VoteDirection.Right, DateTime.UtcNow); // hit
+        s = s.ViewerVotes("u1", VoteDirection.Left, DateTime.UtcNow);  // miss
+        s = s.CloseCard();
+        Assert.Equal(GamePhase.CardReveal, s.Phase);
+        Assert.Equal(1, s.AciertosByNick["u0"]);
+        Assert.Equal(0, s.AciertosByNick["u1"]);
+    }
+
+    [Fact]
+    public void CloseCard_when_streamer_did_not_vote_cancels_card()
+    {
+        var s = StartedGame();
+        s = s.ViewerVotes("u0", VoteDirection.Right, DateTime.UtcNow);
+        s = s.CloseCard();
+        Assert.Equal(GamePhase.CardReveal, s.Phase);
+        Assert.Equal(0, s.AciertosByNick["u0"]);
+    }
 }
