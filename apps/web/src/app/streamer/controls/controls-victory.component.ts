@@ -1,4 +1,4 @@
-import { Component, Input, inject, computed, OnChanges } from '@angular/core';
+import { Component, Input, inject, computed, signal, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameStateStore, PackDto } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
@@ -25,7 +25,8 @@ import { SignalRService } from '../../core/signalr.service';
       <div class="new-round">
         <h3>NUEVA PARTIDA</h3>
         <div class="round-btns">
-          <button class="btn-same" (click)="samePackNewRound()" [disabled]="!currentPackId()">
+          <button class="btn-same" (click)="samePackNewRound()"
+                  [disabled]="!currentPackId() || busy()">
             ↺ MISMO PACK
           </button>
           <div class="other-pack">
@@ -34,10 +35,12 @@ import { SignalRService } from '../../core/signalr.service';
                 <option [value]="p.id">{{ p.name }}</option>
               }
             </select>
-            <button class="btn-other" (click)="otherPackNewRound()">▶ OTRO PACK</button>
+            <button class="btn-other" (click)="otherPackNewRound()" [disabled]="busy()">▶ OTRO PACK</button>
           </div>
         </div>
       </div>
+
+      @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
     </div>
   `,
   styles: [`
@@ -71,7 +74,9 @@ import { SignalRService } from '../../core/signalr.service';
       border: none; padding: var(--u2) var(--u2);
       cursor: pointer; box-shadow: var(--shadow-pixel);
     }
-    .btn-other:hover { background: var(--c-paper); }
+    .btn-other:hover:not(:disabled) { background: var(--c-paper); }
+    .btn-other:disabled { opacity: 0.4; cursor: not-allowed; }
+    .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
   `]
 })
 export class ControlsVictoryComponent implements OnChanges {
@@ -80,6 +85,8 @@ export class ControlsVictoryComponent implements OnChanges {
   protected sr = inject(SignalRService);
   protected selectedPackId = '';
   protected readonly currentPackId = computed(() => this.store.state()?.pack?.id ?? '');
+  protected busy = signal(false);
+  protected errorMsg = '';
 
   ngOnChanges(): void {
     if (this.packs.length > 0 && !this.selectedPackId) {
@@ -89,20 +96,30 @@ export class ControlsVictoryComponent implements OnChanges {
 
   protected async samePackNewRound(): Promise<void> {
     const packId = this.currentPackId();
-    if (!packId) return;
+    if (!packId || this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
-      await this.sr.invoke('OpenLobby', packId, '');
-    } catch (e) {
-      console.error('OpenLobby (same pack) failed:', e);
+      const nick = this.store.streamerNick();
+      await this.sr.invoke('OpenLobby', packId, nick);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al abrir nueva partida';
+    } finally {
+      this.busy.set(false);
     }
   }
 
   protected async otherPackNewRound(): Promise<void> {
-    if (!this.selectedPackId) return;
+    if (!this.selectedPackId || this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
-      await this.sr.invoke('OpenLobby', this.selectedPackId, '');
-    } catch (e) {
-      console.error('OpenLobby (other pack) failed:', e);
+      const nick = this.store.streamerNick();
+      await this.sr.invoke('OpenLobby', this.selectedPackId, nick);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al abrir nueva partida';
+    } finally {
+      this.busy.set(false);
     }
   }
 }

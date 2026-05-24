@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
@@ -11,9 +11,10 @@ import { SignalRService } from '../../core/signalr.service';
       <p class="info">
         Streamer votó: <strong>{{ store.state()?.streamerVote === 'left' ? '← NO' : '→ SÍ' }}</strong>
       </p>
-      <button class="btn-next" (click)="nextCard()">
+      <button class="btn-next" (click)="nextCard()" [disabled]="busy()">
         {{ isLastCard() ? '▶▶ INICIAR CRIBA' : '▶ SIGUIENTE CARTA' }}
       </button>
+      @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
     </div>
   `,
   styles: [`
@@ -28,12 +29,16 @@ import { SignalRService } from '../../core/signalr.service';
       cursor: pointer; box-shadow: var(--shadow-pixel);
       width: fit-content;
     }
-    .btn-next:hover { background: var(--c-paper); }
+    .btn-next:hover:not(:disabled) { background: var(--c-paper); }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+    .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
   `]
 })
 export class ControlsCardRevealComponent {
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
+  protected busy = signal(false);
+  protected errorMsg = '';
 
   protected readonly isLastCard = computed(() => {
     const s = this.store.state();
@@ -42,10 +47,15 @@ export class ControlsCardRevealComponent {
   });
 
   protected async nextCard(): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('NextCard');
-    } catch (e) {
-      console.error('NextCard failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al pasar de carta';
+    } finally {
+      this.busy.set(false);
     }
   }
 }

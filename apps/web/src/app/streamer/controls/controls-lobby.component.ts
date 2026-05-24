@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameStateStore } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
@@ -13,24 +13,26 @@ import { SignalRService } from '../../core/signalr.service';
 
       <div class="lobby-actions">
         <button class="btn-primary" (click)="startGame()"
-                [disabled]="store.lobbyPlayers().length < 10">
+                [disabled]="store.lobbyPlayers().length < 10 || busy()">
           ▶ INICIAR PARTIDA
           @if (store.lobbyPlayers().length < 10) {
             <small>(mínimo 10 jugadores)</small>
           }
         </button>
 
-        <button class="btn-danger" (click)="vaciarLobby()">
+        <button class="btn-danger" (click)="vaciarLobby()" [disabled]="busy()">
           × VACIAR LOBBY
         </button>
       </div>
+
+      @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
 
       <div class="ban-row">
         <label>BANEAR NICK</label>
         <div class="ban-input">
           <input type="text" [(ngModel)]="banNick" placeholder="nick_a_banear" maxlength="25"
                  (keyup.enter)="ban()" />
-          <button class="btn-ban" (click)="ban()" [disabled]="!banNick.trim()">BAN</button>
+          <button class="btn-ban" (click)="ban()" [disabled]="!banNick.trim() || busy()">BAN</button>
         </div>
         @if (banMsg) { <p class="ban-msg">{{ banMsg }}</p> }
       </div>
@@ -39,7 +41,8 @@ import { SignalRService } from '../../core/signalr.service';
         @for (p of store.lobbyPlayers(); track p.nick) {
           <div class="player-row">
             <span>{{'@'}}{{ p.nick }}</span>
-            <button class="btn-mini-ban" (click)="banPlayer(p.nick)">ban</button>
+            <button class="btn-mini-ban" (click)="banPlayer(p.nick)"
+                    [disabled]="banBusy() === p.nick">ban</button>
           </div>
         }
       </div>
@@ -65,7 +68,8 @@ import { SignalRService } from '../../core/signalr.service';
       border: none; padding: var(--u2) var(--u3);
       cursor: pointer; box-shadow: var(--shadow-pixel);
     }
-    .btn-danger:hover { background: var(--c-paper); color: var(--c-danger); }
+    .btn-danger:hover:not(:disabled) { background: var(--c-paper); color: var(--c-danger); }
+    .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
     .ban-row { display: flex; flex-direction: column; gap: var(--u-half); }
     label { font-size: var(--fs-xs); color: var(--c-ash); letter-spacing: 1px; }
     .ban-input { display: flex; gap: var(--u); }
@@ -84,6 +88,7 @@ import { SignalRService } from '../../core/signalr.service';
     }
     .btn-ban:disabled { opacity: 0.4; cursor: not-allowed; }
     .ban-msg { font-size: var(--fs-xs); color: var(--c-success); }
+    .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
     .player-list {
       display: flex; flex-direction: column; gap: 4px;
       max-height: 400px; overflow-y: auto;
@@ -101,7 +106,8 @@ import { SignalRService } from '../../core/signalr.service';
       border: 1px solid var(--c-danger); padding: 2px 6px;
       cursor: pointer;
     }
-    .btn-mini-ban:hover { background: var(--c-danger); color: var(--c-void); }
+    .btn-mini-ban:hover:not(:disabled) { background: var(--c-danger); color: var(--c-void); }
+    .btn-mini-ban:disabled { opacity: 0.4; cursor: not-allowed; }
   `]
 })
 export class ControlsLobbyComponent {
@@ -109,40 +115,62 @@ export class ControlsLobbyComponent {
   protected sr = inject(SignalRService);
   protected banNick = '';
   protected banMsg = '';
+  protected busy = signal(false);
+  protected banBusy = signal('');
+  protected errorMsg = '';
 
   protected async startGame(): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('StartGame');
-    } catch (e) {
-      console.error('StartGame failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al iniciar la partida';
+    } finally {
+      this.busy.set(false);
     }
   }
 
   protected async vaciarLobby(): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('VaciarLobby');
-    } catch (e) {
-      console.error('VaciarLobby failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al vaciar el lobby';
+    } finally {
+      this.busy.set(false);
     }
   }
 
   protected async ban(): Promise<void> {
-    if (!this.banNick.trim()) return;
+    if (!this.banNick.trim() || this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('Ban', this.banNick.trim());
       this.banMsg = `${this.banNick.trim()} baneado`;
       this.banNick = '';
       setTimeout(() => this.banMsg = '', 3000);
-    } catch (e) {
-      console.error('Ban failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al banear';
+    } finally {
+      this.busy.set(false);
     }
   }
 
   protected async banPlayer(nick: string): Promise<void> {
+    if (this.banBusy()) return;
+    this.banBusy.set(nick);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('Ban', nick);
-    } catch (e) {
-      console.error('Ban player failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al banear jugador';
+    } finally {
+      this.banBusy.set('');
     }
   }
 }

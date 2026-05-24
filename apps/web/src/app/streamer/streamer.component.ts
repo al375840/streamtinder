@@ -36,6 +36,13 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
       </header>
 
       <main class="s-main">
+        @if (connectionError()) {
+          <div class="conn-error">
+            ⚠ Error de conexión: {{ connectionError() }}<br>
+            <button (click)="ngOnInit()">Reintentar</button>
+          </div>
+        }
+
         @switch (store.phase()) {
           @case ('idle')            { <controls-idle [packs]="packs()" /> }
           @case ('lobby')           { <controls-lobby /> }
@@ -87,23 +94,45 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
     .s-main {
       flex: 1; padding: var(--u4); max-width: 960px; margin: 0 auto; width: 100%;
     }
+    .conn-error {
+      color: var(--c-danger);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      padding: var(--u3);
+      border: 4px solid var(--c-danger);
+      background: var(--c-dusk);
+      margin-bottom: var(--u2);
+    }
+    .conn-error button {
+      font-family: var(--font-title); font-size: var(--fs-sm);
+      background: var(--c-danger); color: var(--c-void);
+      border: none; padding: var(--u) var(--u3);
+      cursor: pointer; margin-top: var(--u);
+    }
+    .conn-error button:hover { background: var(--c-paper); color: var(--c-danger); }
   `]
 })
 export class StreamerComponent implements OnInit {
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   protected packs = signal<PackDto[]>([]);
+  protected connectionError = signal('');
 
   async ngOnInit(): Promise<void> {
-    await this.sr.connect(
-      (s) => this.store.state.set(s as GameStateDto | null),
-      (w) => this.store.winners.set(w as GameWinnerDto[])
-    );
+    this.connectionError.set('');
     try {
-      const packs = await this.sr.invoke<PackDto[]>('ListPacks');
-      this.packs.set(packs ?? []);
-    } catch (e) {
-      console.warn('Could not load packs:', e);
+      await this.sr.connect(
+        (s) => this.store.state.set(s as GameStateDto | null),
+        (w) => this.store.winners.set(w as GameWinnerDto[])
+      );
+      try {
+        const packs = await this.sr.invoke<PackDto[]>('ListPacks');
+        this.packs.set(packs ?? []);
+      } catch (e) {
+        console.warn('Could not load packs:', e);
+      }
+    } catch (e: any) {
+      this.connectionError.set(e?.message ?? 'No se puede conectar al servidor');
     }
   }
 }

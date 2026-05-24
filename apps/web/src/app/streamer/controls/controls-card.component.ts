@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
@@ -14,8 +14,8 @@ import { SignalRService } from '../../core/signalr.service';
 
       @if (!hasVoted()) {
         <div class="vote-row">
-          <button class="btn-no" (click)="vote('left')">← NO · !izq</button>
-          <button class="btn-yes" (click)="vote('right')">SÍ · !der →</button>
+          <button class="btn-no" (click)="vote('left')" [disabled]="busy()">← NO · !izq</button>
+          <button class="btn-yes" (click)="vote('right')" [disabled]="busy()">SÍ · !der →</button>
         </div>
         <p class="hint">Tu voto decide cuántos espectadores aciertan</p>
       } @else {
@@ -26,11 +26,13 @@ import { SignalRService } from '../../core/signalr.service';
               {{ store.state()?.streamerVote === 'left' ? '← NO · IZQ' : '→ SÍ · DER' }}
             </strong>
           </p>
-          <button class="btn-close" (click)="closeCard()">
+          <button class="btn-close" (click)="closeCard()" [disabled]="busy()">
             ■ CERRAR CARTA
           </button>
         </div>
       }
+
+      @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
     </div>
   `,
   styles: [`
@@ -44,16 +46,17 @@ import { SignalRService } from '../../core/signalr.service';
       border: 6px solid; cursor: pointer;
       box-shadow: var(--shadow-pixel-lg);
     }
+    .btn-no:disabled, .btn-yes:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-no {
       background: var(--c-void); color: var(--c-danger);
       border-color: var(--c-danger);
     }
-    .btn-no:hover { background: var(--c-danger); color: var(--c-void); }
+    .btn-no:hover:not(:disabled) { background: var(--c-danger); color: var(--c-void); }
     .btn-yes {
       background: var(--c-void); color: var(--c-success);
       border-color: var(--c-success);
     }
-    .btn-yes:hover { background: var(--c-success); color: var(--c-void); }
+    .btn-yes:hover:not(:disabled) { background: var(--c-success); color: var(--c-void); }
     .hint { font-family: var(--font-body); font-size: var(--fs-body-sm); color: var(--c-ash); }
     .voted-state { display: flex; flex-direction: column; gap: var(--u2); }
     .voted-label { font-size: var(--fs-md); color: var(--c-bone); }
@@ -66,27 +69,41 @@ import { SignalRService } from '../../core/signalr.service';
       cursor: pointer; box-shadow: var(--shadow-pixel);
       width: fit-content;
     }
-    .btn-close:hover { background: var(--c-paper); }
+    .btn-close:hover:not(:disabled) { background: var(--c-paper); }
+    .btn-close:disabled { opacity: 0.4; cursor: not-allowed; }
+    .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
   `]
 })
 export class ControlsCardComponent {
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   protected readonly hasVoted = computed(() => !!this.store.state()?.streamerVote);
+  protected busy = signal(false);
+  protected errorMsg = '';
 
   protected async vote(dir: 'left' | 'right'): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('StreamerVote', dir);
-    } catch (e) {
-      console.error('StreamerVote failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al votar';
+    } finally {
+      this.busy.set(false);
     }
   }
 
   protected async closeCard(): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('CloseCard');
-    } catch (e) {
-      console.error('CloseCard failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al cerrar la carta';
+    } finally {
+      this.busy.set(false);
     }
   }
 }

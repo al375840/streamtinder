@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
@@ -17,7 +17,8 @@ import { SignalRService } from '../../core/signalr.service';
           @for (tier of tiers; track tier) {
             <button class="tier-btn"
                     [class.eliminated]="isEliminated(tier)"
-                    (click)="toggleTier(tier)">
+                    (click)="toggleTier(tier)"
+                    [disabled]="togglingTier() !== null">
               <span class="tn">{{ tier }}</span>
               <span class="ts">{{ tierSize(tier) }} viewers</span>
               @if (isEliminated(tier)) { <span class="ex">×</span> }
@@ -25,8 +26,10 @@ import { SignalRService } from '../../core/signalr.service';
           }
         </div>
 
+        @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
+
         <button class="btn-finalize" (click)="finalizeCriba()"
-                [disabled]="survivorCount() === 0">
+                [disabled]="survivorCount() === 0 || busy()">
           ✓ FINALIZAR CRIBA
         </button>
       }
@@ -49,7 +52,8 @@ import { SignalRService } from '../../core/signalr.service';
       display: flex; flex-direction: column; align-items: center; gap: 4px;
       box-shadow: var(--shadow-pixel);
     }
-    .tier-btn:hover { border-color: var(--c-flame); }
+    .tier-btn:hover:not(:disabled) { border-color: var(--c-flame); }
+    .tier-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .tier-btn.eliminated { background: var(--c-night); border-color: var(--c-danger); color: var(--c-danger); }
     .tn { font-size: 20px; color: inherit; }
     .ts { font-size: 8px; color: var(--c-ash); }
@@ -58,6 +62,7 @@ import { SignalRService } from '../../core/signalr.service';
       position: absolute; top: 2px; right: 4px;
       font-size: 14px; color: var(--c-danger);
     }
+    .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
     .btn-finalize {
       font-family: var(--font-title); font-size: var(--fs-md);
       background: var(--c-success); color: var(--c-void);
@@ -73,6 +78,9 @@ export class ControlsCribaComponent {
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   readonly tiers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  protected togglingTier = signal<number | null>(null);
+  protected busy = signal(false);
+  protected errorMsg = '';
 
   protected isEliminated(tier: number): boolean {
     return this.store.eliminatedTiers().includes(tier);
@@ -94,18 +102,28 @@ export class ControlsCribaComponent {
   );
 
   protected async toggleTier(tier: number): Promise<void> {
+    if (this.togglingTier() !== null) return;
+    this.togglingTier.set(tier);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('EliminateTier', tier);
-    } catch (e) {
-      console.error('EliminateTier failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al cambiar tier';
+    } finally {
+      this.togglingTier.set(null);
     }
   }
 
   protected async finalizeCriba(): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
     try {
       await this.sr.invoke('FinalizeCriba');
-    } catch (e) {
-      console.error('FinalizeCriba failed:', e);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al finalizar la criba';
+    } finally {
+      this.busy.set(false);
     }
   }
 }

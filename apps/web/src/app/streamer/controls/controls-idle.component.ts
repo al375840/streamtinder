@@ -1,6 +1,6 @@
 import { Component, Input, inject, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PackDto } from '../../core/game-state.store';
+import { GameStateStore, PackDto } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
 @Component({
@@ -63,6 +63,7 @@ import { SignalRService } from '../../core/signalr.service';
 })
 export class ControlsIdleComponent implements OnChanges {
   @Input() packs: PackDto[] = [];
+  protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   protected selectedPackId = '';
   protected streamerNick = '';
@@ -83,6 +84,7 @@ export class ControlsIdleComponent implements OnChanges {
     this.errorMsg = '';
     try {
       await this.sr.invoke('OpenLobby', this.selectedPackId, this.streamerNick.trim());
+      this.store.streamerNick.set(this.streamerNick.trim());
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al abrir lobby';
     }

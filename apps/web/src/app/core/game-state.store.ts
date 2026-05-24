@@ -48,6 +48,7 @@ export interface GameWinnerDto {
 export class GameStateStore {
   readonly state = signal<GameStateDto | null>(null);
   readonly winners = signal<GameWinnerDto[]>([]);
+  readonly streamerNick = signal<string>('');
   readonly phase = computed(() => this.state()?.phase ?? 'idle');
 
   // Computed útiles
