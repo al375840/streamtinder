@@ -62,7 +62,7 @@ import { GameStateStore } from '../../core/game-state.store';
       display: flex; align-items: center; justify-content: center;
       color: var(--c-bone); font-family: var(--font-title); font-size: 10px;
     }
-    .img img { width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated; }
+    .img img { width: 70%; height: 70%; object-fit: contain; }
     .nm { font-family: var(--font-title); font-size: 18px; color: var(--c-void); text-align: center; padding: var(--u); }
     .reveal-pick { display: flex; flex-direction: column; align-items: center; gap: var(--u); text-align: center; }
     .alias { font-family: var(--font-title); font-size: 11px; color: var(--c-paper); }

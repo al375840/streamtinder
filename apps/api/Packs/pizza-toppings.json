@@ -5,15 +5,15 @@
   "palettePrimary": "#ff8a3d",
   "paletteAccent": "#ffd33d",
   "cards": [
-    { "id": "pina",         "imagePath": "/assets/packs/pizza-toppings/pina.jpg",                                                                                                                                                      "subtitle": "Piña (Hawai)" },
-    { "id": "anchoas",      "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Anchovy_closeup.jpg/320px-Anchovy_closeup.jpg",                                                                                       "subtitle": "Anchoas" },
-    { "id": "maiz",         "imagePath": "/assets/packs/pizza-toppings/maiz.jpg",                                                                                                                                                     "subtitle": "Maíz dulce" },
-    { "id": "huevo",        "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Fried_egg%2C_sunny_side_up.jpg/320px-Fried_egg%2C_sunny_side_up.jpg",                                                                 "subtitle": "Huevo frito" },
-    { "id": "champi",       "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Agaricus_bisporus.jpg/320px-Agaricus_bisporus.jpg",                                                                                   "subtitle": "Champiñones" },
-    { "id": "rucola",       "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Rucola.JPG/320px-Rucola.JPG",                                                                                                        "subtitle": "Rúcula fresca" },
-    { "id": "gorgonzola",   "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/GorgonzolaIl.jpg/320px-GorgonzolaIl.jpg",                                                                                             "subtitle": "Gorgonzola" },
-    { "id": "pollo",        "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Roast_chicken.jpg/320px-Roast_chicken.jpg",                                                                                           "subtitle": "Pollo asado" },
-    { "id": "mermelada",    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Strawberry_jam_on_a_plate.jpg/320px-Strawberry_jam_on_a_plate.jpg",                                                                   "subtitle": "Mermelada de fresa" },
-    { "id": "chocolate",    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Chocolate_%28black%29.jpg/320px-Chocolate_%28black%29.jpg",                                                                           "subtitle": "Chocolate fundido" }
+    { "id": "pina",         "imagePath": "/assets/packs/pizza-toppings/pina.jpg",         "subtitle": "Piña (Hawai)" },
+    { "id": "anchoas",      "imagePath": "/assets/packs/pizza-toppings/anchoas.jpg",      "subtitle": "Anchoas" },
+    { "id": "maiz",         "imagePath": "/assets/packs/pizza-toppings/maiz.jpg",         "subtitle": "Maíz dulce" },
+    { "id": "huevo",        "imagePath": "/assets/packs/pizza-toppings/huevo.jpg",        "subtitle": "Huevo frito" },
+    { "id": "champi",       "imagePath": "/assets/packs/pizza-toppings/champi.jpg",       "subtitle": "Champiñones" },
+    { "id": "rucola",       "imagePath": "/assets/packs/pizza-toppings/rucola.jpg",       "subtitle": "Rúcula fresca" },
+    { "id": "gorgonzola",   "imagePath": "/assets/packs/pizza-toppings/gorgonzola.jpg",   "subtitle": "Gorgonzola" },
+    { "id": "pollo",        "imagePath": "/assets/packs/pizza-toppings/pollo.jpg",        "subtitle": "Pollo asado" },
+    { "id": "mermelada",    "imagePath": "/assets/packs/pizza-toppings/mermelada.jpg",    "subtitle": "Mermelada de fresa" },
+    { "id": "chocolate",    "imagePath": "/assets/packs/pizza-toppings/chocolate.jpg",    "subtitle": "Chocolate fundido" }
   ]
 }

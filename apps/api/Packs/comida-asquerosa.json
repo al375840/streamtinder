@@ -5,15 +5,15 @@
   "palettePrimary": "#5fde6f",
   "paletteAccent": "#c97aff",
   "cards": [
-    { "id": "natto",        "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Natto.JPG/320px-Natto.JPG",                                                                                                          "subtitle": "Natto (soja fermentada)" },
-    { "id": "durian",       "imagePath": "/assets/packs/comida-asquerosa/durian.jpg",                                                                                                                                                       "subtitle": "Durian fresco" },
-    { "id": "hakarl",       "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Hakarl_near_Bjarnah%C3%B6fn_in_Iceland.JPG/320px-Hakarl_near_Bjarnah%C3%B6fn_in_Iceland.JPG",                                        "subtitle": "Hákarl (tiburón podrido)" },
-    { "id": "balut",        "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/The_Balut.jpg/320px-The_Balut.jpg",                                                                                                    "subtitle": "Balut (embrión de pato)" },
-    { "id": "casu",         "imagePath": "/assets/packs/comida-asquerosa/casu.jpg",                                                                                                                                                        "subtitle": "Casu Marzu (queso con gusanos)" },
-    { "id": "surstr",       "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Surstr%C3%B6mming.jpg/320px-Surstr%C3%B6mming.jpg",                                                                                   "subtitle": "Surströmming (arenque sueco)" },
-    { "id": "boca",         "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Beef_tongue_preparation.jpg/320px-Beef_tongue_preparation.jpg",                                                                       "subtitle": "Boca de vaca hervida" },
-    { "id": "sangre",       "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Stornoway_Black_Pudding.jpg/320px-Stornoway_Black_Pudding.jpg",                                                                        "subtitle": "Morcilla de sangre cruda" },
-    { "id": "pata",         "imagePath": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Chicken_feet.jpg/320px-Chicken_feet.jpg",                                                                                             "subtitle": "Pata de pollo a la plancha" },
-    { "id": "escarabajos",  "imagePath": "/assets/packs/comida-asquerosa/escarabajos.jpg",                                                                                                                                          "subtitle": "Escarabajos fritos" }
+    { "id": "natto",        "imagePath": "/assets/packs/comida-asquerosa/natto.jpg",        "subtitle": "Natto (soja fermentada)" },
+    { "id": "durian",       "imagePath": "/assets/packs/comida-asquerosa/durian.jpg",       "subtitle": "Durian fresco" },
+    { "id": "hakarl",       "imagePath": "/assets/packs/comida-asquerosa/hakarl.jpg",       "subtitle": "Hákarl (tiburón podrido)" },
+    { "id": "balut",        "imagePath": "/assets/packs/comida-asquerosa/balut.jpg",        "subtitle": "Balut (embrión de pato)" },
+    { "id": "casu",         "imagePath": "/assets/packs/comida-asquerosa/casu.jpg",         "subtitle": "Casu Marzu (queso con gusanos)" },
+    { "id": "surstr",       "imagePath": "/assets/packs/comida-asquerosa/surstr.jpg",       "subtitle": "Surströmming (arenque sueco)" },
+    { "id": "boca",         "imagePath": "/assets/packs/comida-asquerosa/boca.jpg",         "subtitle": "Boca de vaca hervida" },
+    { "id": "sangre",       "imagePath": "/assets/packs/comida-asquerosa/sangre.jpg",       "subtitle": "Morcilla de sangre cruda" },
+    { "id": "pata",         "imagePath": "/assets/packs/comida-asquerosa/pata.jpg",         "subtitle": "Pata de pollo a la plancha" },
+    { "id": "escarabajos",  "imagePath": "/assets/packs/comida-asquerosa/escarabajos.jpg",  "subtitle": "Escarabajos fritos" }
   ]
 }

@@ -1,8 +1,0 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <rect width="256" height="256" fill="#2a0000"/>
-  <rect x="8" y="8" width="240" height="240" fill="none" stroke="#ff6633" stroke-width="4"/>
-  <rect x="16" y="16" width="224" height="224" fill="none" stroke="#ff6633" stroke-width="1" stroke-dasharray="8,4"/>
-  <text x="128" y="120" font-family="monospace" font-size="64" text-anchor="middle" dominant-baseline="middle" fill="#ff6633">🏔</text>
-  <text x="128" y="180" font-family="monospace" font-size="20" font-weight="bold" text-anchor="middle" fill="#ff6633" letter-spacing="2">T.OGRE</text>
-  <text x="128" y="210" font-family="monospace" font-size="11" text-anchor="middle" fill="#ff6633" opacity="0.6">RPG CLÁSICO</text>
-</svg>

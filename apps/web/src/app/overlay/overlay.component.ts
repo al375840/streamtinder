@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, inject, computed } from '@angular/core';
 import { SignalRService } from '../core/signalr.service';
 import { GameStateStore, GameStateDto, GameWinnerDto } from '../core/game-state.store';
 import { PhaseIdleComponent } from './phases/phase-idle.component';
@@ -17,7 +17,7 @@ import { PhaseVictoryComponent } from './phases/phase-victory.component';
     PhaseCardRevealComponent, PhaseTallyComponent, PhaseCribaComponent, PhaseVictoryComponent
   ],
   template: `
-    <div class="overlay-root">
+    <div class="overlay-root" #overlayRoot>
       <!-- TOP CHROME -->
       <div class="ov-topbar">
         <div class="ov-pack">
@@ -59,9 +59,19 @@ import { PhaseVictoryComponent } from './phases/phase-victory.component';
     </div>
   `,
   styles: [`
-    .overlay-root {
+    :host {
+      display: block;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #000;
       position: relative;
+    }
+    .overlay-root {
+      position: absolute;
+      left: 50%; top: 50%;
       width: 1280px; height: 720px;
+      transform: translate(-50%, -50%) scale(var(--overlay-scale, 1));
+      transform-origin: center;
       background: var(--c-night);
       overflow: hidden;
       display: flex;
@@ -139,9 +149,11 @@ import { PhaseVictoryComponent } from './phases/phase-victory.component';
     }
   `]
 })
-export class OverlayComponent implements OnInit {
+export class OverlayComponent implements OnInit, OnDestroy {
   protected store = inject(GameStateStore);
   private sr = inject(SignalRService);
+  @ViewChild('overlayRoot', { static: true }) private overlayRoot!: ElementRef<HTMLElement>;
+  private ro: ResizeObserver | null = null;
 
   protected readonly phase = this.store.phase;
   protected readonly cardIndex = computed(() => this.store.state()?.cardIndex ?? 0);
@@ -167,11 +179,23 @@ export class OverlayComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    this.updateScale();
+    this.ro = new ResizeObserver(() => this.updateScale());
+    this.ro.observe(document.documentElement);
     // SignalR delivers unknown — cast to the DTOs we know the hub sends.
     // Full runtime validation (Zod) is not warranted for this use-case.
     await this.sr.connect(
       (s) => this.store.state.set(s as GameStateDto | null),
       (w) => this.store.winners.set(w as GameWinnerDto[])
     );
+  }
+
+  ngOnDestroy(): void {
+    this.ro?.disconnect();
+  }
+
+  private updateScale(): void {
+    const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    this.overlayRoot.nativeElement.style.setProperty('--overlay-scale', String(s));
   }
 }
