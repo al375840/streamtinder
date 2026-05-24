@@ -98,8 +98,15 @@ _ReSharper*/
 node_modules/
 dist/
 .angular/
-# Angular build output served as .NET static files — regenerated on build
-apps/api/wwwroot/
+# Angular build output — regenerated on every build; assets/ is tracked
+apps/api/wwwroot/*.js
+apps/api/wwwroot/*.css
+apps/api/wwwroot/*.html
+apps/api/wwwroot/*.ico
+apps/api/wwwroot/*.txt
+apps/api/wwwroot/*.map
+apps/api/wwwroot/*.json
+# (assets/ subfolder is intentionally NOT ignored)
 .cache/
 npm-debug.log*
 yarn-debug.log*

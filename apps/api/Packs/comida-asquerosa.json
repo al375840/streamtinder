@@ -1,0 +1,19 @@
+{
+  "id": "comida-asquerosa",
+  "name": "Comida Asquerosa",
+  "question": "¿Lo comerías por 100€?",
+  "palettePrimary": "#5fde6f",
+  "paletteAccent": "#c97aff",
+  "cards": [
+    { "id": "natto",        "imagePath": "/assets/packs/comida-asquerosa/natto.svg",        "subtitle": "Natto (soja fermentada)" },
+    { "id": "durian",       "imagePath": "/assets/packs/comida-asquerosa/durian.svg",       "subtitle": "Durian fresco" },
+    { "id": "hakarl",       "imagePath": "/assets/packs/comida-asquerosa/hakarl.svg",       "subtitle": "Hákarl (tiburón podrido)" },
+    { "id": "balut",        "imagePath": "/assets/packs/comida-asquerosa/balut.svg",        "subtitle": "Balut (embrión de pato)" },
+    { "id": "casu",         "imagePath": "/assets/packs/comida-asquerosa/casu.svg",         "subtitle": "Casu Marzu (queso con gusanos)" },
+    { "id": "surstr",       "imagePath": "/assets/packs/comida-asquerosa/surstr.svg",       "subtitle": "Surströmming (arenque sueco)" },
+    { "id": "boca",         "imagePath": "/assets/packs/comida-asquerosa/boca.svg",         "subtitle": "Boca de vaca hervida" },
+    { "id": "sangre",       "imagePath": "/assets/packs/comida-asquerosa/sangre.svg",       "subtitle": "Morcilla de sangre cruda" },
+    { "id": "pata",         "imagePath": "/assets/packs/comida-asquerosa/pata.svg",         "subtitle": "Pata de pollo a la plancha" },
+    { "id": "escarabajos",  "imagePath": "/assets/packs/comida-asquerosa/escarabajos.svg",  "subtitle": "Escarabajos fritos" }
+  ]
+}

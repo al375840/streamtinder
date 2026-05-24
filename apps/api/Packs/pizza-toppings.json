@@ -1,0 +1,19 @@
+{
+  "id": "pizza-toppings",
+  "name": "Pizza Toppings",
+  "question": "¿Lo pondrías en tu pizza?",
+  "palettePrimary": "#ff8a3d",
+  "paletteAccent": "#ffd33d",
+  "cards": [
+    { "id": "pina",         "imagePath": "/assets/packs/pizza-toppings/pina.svg",         "subtitle": "Piña (Hawai)" },
+    { "id": "anchoas",      "imagePath": "/assets/packs/pizza-toppings/anchoas.svg",      "subtitle": "Anchoas" },
+    { "id": "maiz",         "imagePath": "/assets/packs/pizza-toppings/maiz.svg",         "subtitle": "Maíz dulce" },
+    { "id": "huevo",        "imagePath": "/assets/packs/pizza-toppings/huevo.svg",        "subtitle": "Huevo frito" },
+    { "id": "champi",       "imagePath": "/assets/packs/pizza-toppings/champi.svg",       "subtitle": "Champiñones" },
+    { "id": "rucola",       "imagePath": "/assets/packs/pizza-toppings/rucola.svg",       "subtitle": "Rúcula fresca" },
+    { "id": "gorgonzola",   "imagePath": "/assets/packs/pizza-toppings/gorgonzola.svg",   "subtitle": "Gorgonzola" },
+    { "id": "pollo",        "imagePath": "/assets/packs/pizza-toppings/pollo.svg",        "subtitle": "Pollo asado" },
+    { "id": "mermelada",    "imagePath": "/assets/packs/pizza-toppings/mermelada.svg",    "subtitle": "Mermelada de fresa" },
+    { "id": "chocolate",    "imagePath": "/assets/packs/pizza-toppings/chocolate.svg",    "subtitle": "Chocolate fundido" }
+  ]
+}
