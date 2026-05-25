@@ -110,17 +110,21 @@ public sealed class GameOrchestrator
             await _pub.PublishStateAsync(_state, ct);
             if (_state.Phase == GamePhase.TallyTransition)
             {
+                // Use CancellationToken.None intentionally: this transition must
+                // complete even if the caller's request context is cancelled or
+                // the connection closes. Using `ct` here would silently leave the
+                // game stuck in TallyTransition if the token fires in < 5 seconds.
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5), ct);
-                    await _lock.WaitAsync(ct);
+                    await Task.Delay(TimeSpan.FromSeconds(5), CancellationToken.None);
+                    await _lock.WaitAsync(CancellationToken.None);
                     try
                     {
                         _state = _state.EnterCriba();
-                        await _pub.PublishStateAsync(_state, ct);
+                        await _pub.PublishStateAsync(_state, CancellationToken.None);
                     }
                     finally { _lock.Release(); }
-                }, ct);
+                });
             }
         }
         finally { _lock.Release(); }

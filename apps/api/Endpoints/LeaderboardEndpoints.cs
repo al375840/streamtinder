@@ -9,14 +9,19 @@ public static class LeaderboardEndpoints
     {
         app.MapGet("/api/leaderboard", async (AppDbContext db, int limit = 100, int offset = 0) =>
         {
+            // Clamp parameters defensively — negative offset causes SQL errors;
+            // unbounded limit would dump the entire table.
+            offset = Math.Max(0, offset);
+            limit = Math.Clamp(limit, 1, 200);
+
             var query = db.Scores.OrderByDescending(s => s.TotalPoints);
             var total = await query.CountAsync();
             var rows = await query
                 .Skip(offset)
-                .Take(Math.Min(limit, 200))
+                .Take(limit)
                 .Select(s => new
                 {
-                    rank = 0, // calculado en memoria abajo
+                    rank = 0, // calculated in-memory below
                     nick = s.TwitchUsername,
                     points = s.TotalPoints,
                     games = s.GamesPlayed,
@@ -25,7 +30,6 @@ public static class LeaderboardEndpoints
                 })
                 .ToListAsync();
 
-            // Asignar rank en memoria
             var rankedRows = rows.Select((r, i) => new
             {
                 rank = offset + i + 1,
@@ -41,6 +45,12 @@ public static class LeaderboardEndpoints
 
         app.MapGet("/api/leaderboard/me", async (AppDbContext db, string nick) =>
         {
+            // Reject malformed nicks early — avoids a pointless DB round-trip and
+            // prevents log noise from bots probing the endpoint.
+            if (string.IsNullOrWhiteSpace(nick) || nick.Length > 25
+                || !nick.All(c => char.IsAsciiLetterOrDigit(c) || c == '_'))
+                return Results.BadRequest("Invalid nick");
+
             var score = await db.Scores
                 .FirstOrDefaultAsync(s => s.TwitchUsername == nick);
             if (score is null) return Results.NotFound();

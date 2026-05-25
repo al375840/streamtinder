@@ -12,7 +12,7 @@ public sealed record GameState(
     IReadOnlyDictionary<string, int> AciertosByNick,
     IReadOnlyList<int> EliminatedTiers)
 {
-    public const int LobbyMin = 1;
+    public const int LobbyMin = 3;
     public const int LobbyMax = 60;
     public const int CardSeconds = 10;
     public const int LobbySeconds = 60;

@@ -36,9 +36,11 @@ builder.Services.ConfigureHttpJsonOptions(opts =>
             System.Text.Json.JsonNamingPolicy.CamelCase));
 });
 
+builder.Services.AddSingleton<StreamerSessionService>();
+
 builder.Services.AddSignalR(hubOpts =>
 {
-    hubOpts.EnableDetailedErrors = true; // TODO: disable after confirming enum fix works
+    hubOpts.EnableDetailedErrors = builder.Environment.IsDevelopment();
 }).AddJsonProtocol(opts =>
 {
     opts.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
