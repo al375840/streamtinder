@@ -1,35 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="fl" x1="30%" y1="0%" x2="70%" y2="100%">
-      <stop offset="0%" stop-color="#ff6b35"/>
-      <stop offset="45%" stop-color="#ff4500"/>
-      <stop offset="100%" stop-color="#e5003c"/>
+    <linearGradient id="outer" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#FFC641"/>
+      <stop offset="45%"  stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#A8324A"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="50%" y1="20%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#FFF1A8"/>
+      <stop offset="60%"  stop-color="#FFB347"/>
+      <stop offset="100%" stop-color="#FF6B35"/>
     </linearGradient>
   </defs>
-  <!-- outer flame body -->
-  <path d="M50 5
-    C50 5 68 22 68 40
-    C68 40 75 30 70 20
-    C70 20 85 34 82 50
-    C82 50 90 44 87 33
-    C87 33 96 46 90 60
-    C85 73 72 82 50 82
-    C28 82 15 73 10 60
-    C4 46 13 33 13 33
-    C10 44 18 50 18 50
-    C15 34 30 20 30 20
-    C25 30 32 40 32 40
-    C32 22 50 5 50 5 Z"
-    fill="url(#fl)"/>
-  <!-- inner highlight -->
-  <path d="M50 28
-    C50 28 58 38 57 48
-    C57 48 63 42 60 35
-    C60 35 66 44 63 54
-    C60 64 55 69 50 69
-    C45 69 40 64 37 54
-    C34 44 40 35 40 35
-    C37 42 43 48 43 48
-    C42 38 50 28 50 28 Z"
-    fill="#ff9f6b" opacity="0.5"/>
+  <!-- Outer flame: tall teardrop with a flick at the tip and a curl on the right -->
+  <path d="M32 3
+    Q26 16 24 28
+    Q18 26 16 20
+    Q8  34 12 46
+    Q16 58 32 60
+    Q48 58 52 46
+    Q56 34 48 22
+    Q46 28 40 30
+    Q40 18 32 3 Z"
+    fill="url(#outer)"/>
+  <!-- Inner flame: smaller, brighter, slightly offset -->
+  <path d="M32 24
+    Q26 34 26 44
+    Q26 52 32 54
+    Q38 52 38 44
+    Q38 34 32 24 Z"
+    fill="url(#inner)"/>
 </svg>

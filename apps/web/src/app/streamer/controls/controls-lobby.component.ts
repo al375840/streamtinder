@@ -55,6 +55,18 @@ import { SignalRService } from '../../core/signalr.service';
           </div>
         }
       </div>
+
+      @if (devMode) {
+        <div class="dev-panel">
+          <label>DEV · INYECTAR BOTS</label>
+          <div class="dev-row">
+            <button (click)="addBots(1)"  [disabled]="busy()">+1</button>
+            <button (click)="addBots(5)"  [disabled]="busy()">+5</button>
+            <button (click)="addBots(10)" [disabled]="busy()">+10</button>
+            <button (click)="addBots(30)" [disabled]="busy()">+30</button>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -125,10 +137,26 @@ import { SignalRService } from '../../core/signalr.service';
     }
     .btn-mini-ban:hover:not(:disabled) { background: var(--c-danger); color: var(--c-void); }
     .btn-mini-ban:disabled { opacity: 0.4; cursor: not-allowed; }
+    .dev-panel {
+      margin-top: var(--u2); padding: var(--u2);
+      border: 2px dashed var(--c-gold); background: rgba(0,0,0,0.3);
+      display: flex; flex-direction: column; gap: var(--u);
+    }
+    .dev-panel label { color: var(--c-gold); font-size: var(--fs-xs); letter-spacing: 1px; }
+    .dev-row { display: flex; gap: var(--u); flex-wrap: wrap; }
+    .dev-row button {
+      font-family: var(--font-title); font-size: var(--fs-xs);
+      background: var(--c-dusk); color: var(--c-gold);
+      border: 2px solid var(--c-gold); padding: var(--u) var(--u2);
+      cursor: pointer;
+    }
+    .dev-row button:hover:not(:disabled) { background: var(--c-gold); color: var(--c-void); }
+    .dev-row button:disabled { opacity: 0.4; cursor: not-allowed; }
   `]
 })
 export class ControlsLobbyComponent implements OnChanges {
   @Input() packs: PackDto[] = [];
+  @Input() devMode = false;
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   protected selectedPackId = '';
@@ -193,6 +221,19 @@ export class ControlsLobbyComponent implements OnChanges {
       setTimeout(() => this.banMsg = '', 3000);
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al banear';
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async addBots(count: number): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
+    try {
+      await this.sr.invoke('DevAddFakePlayers', count);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al añadir bots';
     } finally {
       this.busy.set(false);
     }

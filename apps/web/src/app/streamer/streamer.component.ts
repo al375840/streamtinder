@@ -43,10 +43,14 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
           </div>
         }
 
+        @if (devMode()) {
+          <div class="dev-banner">⚙ DEV MODE — botones extra activos (solo entorno Development)</div>
+        }
+
         @switch (store.phase()) {
           @case ('idle')            { <controls-idle [packs]="packs()" /> }
-          @case ('lobby')           { <controls-lobby [packs]="packs()" /> }
-          @case ('card')            { <controls-card /> }
+          @case ('lobby')           { <controls-lobby [packs]="packs()" [devMode]="devMode()" /> }
+          @case ('card')            { <controls-card [devMode]="devMode()" /> }
           @case ('cardReveal')      { <controls-card-reveal /> }
           @case ('tallyTransition') { <controls-criba /> }
           @case ('criba')           { <controls-criba /> }
@@ -110,6 +114,16 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
       cursor: pointer; margin-top: var(--u);
     }
     .conn-error button:hover { background: var(--c-paper); color: var(--c-danger); }
+    .dev-banner {
+      background: repeating-linear-gradient(45deg,
+        var(--c-gold) 0 12px, var(--c-dusk) 12px 24px);
+      color: var(--c-void);
+      font-family: var(--font-title); font-size: var(--fs-xs);
+      padding: var(--u) var(--u2);
+      border: 2px dashed var(--c-void);
+      margin-bottom: var(--u2);
+      text-align: center; letter-spacing: 1px;
+    }
   `]
 })
 export class StreamerComponent implements OnInit {
@@ -117,6 +131,9 @@ export class StreamerComponent implements OnInit {
   protected sr = inject(SignalRService);
   protected packs = signal<PackDto[]>([]);
   protected connectionError = signal('');
+  /** Enabled with ?dev=1 in the URL. Server still gates the actual mutations
+   *  (IWebHostEnvironment.IsDevelopment) — this flag only toggles the UI. */
+  protected devMode = signal(new URLSearchParams(location.search).get('dev') === '1');
 
   async ngOnInit(): Promise<void> {
     this.connectionError.set('');

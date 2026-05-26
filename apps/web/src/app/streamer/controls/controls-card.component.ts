@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, Input, inject, computed, signal } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
 import { SignalRService } from '../../core/signalr.service';
 
@@ -33,6 +33,17 @@ import { SignalRService } from '../../core/signalr.service';
       }
 
       @if (errorMsg) { <p class="error-msg">{{ errorMsg }}</p> }
+
+      @if (devMode) {
+        <div class="dev-panel">
+          <label>DEV · AUTO-VOTAR CHAT</label>
+          <div class="dev-row">
+            <button (click)="autoVote(20)"  [disabled]="busy()">80% sí</button>
+            <button (click)="autoVote(50)"  [disabled]="busy()">50/50</button>
+            <button (click)="autoVote(80)"  [disabled]="busy()">80% no</button>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -72,14 +83,43 @@ import { SignalRService } from '../../core/signalr.service';
     .btn-close:hover:not(:disabled) { background: var(--c-paper); }
     .btn-close:disabled { opacity: 0.4; cursor: not-allowed; }
     .error-msg { color: var(--c-danger); font-size: var(--fs-xs); margin-top: var(--u); }
+    .dev-panel {
+      margin-top: var(--u2); padding: var(--u2);
+      border: 2px dashed var(--c-gold); background: rgba(0,0,0,0.3);
+      display: flex; flex-direction: column; gap: var(--u);
+    }
+    .dev-panel label { color: var(--c-gold); font-size: var(--fs-xs); letter-spacing: 1px; }
+    .dev-row { display: flex; gap: var(--u); flex-wrap: wrap; }
+    .dev-row button {
+      font-family: var(--font-title); font-size: var(--fs-xs);
+      background: var(--c-dusk); color: var(--c-gold);
+      border: 2px solid var(--c-gold); padding: var(--u) var(--u2);
+      cursor: pointer;
+    }
+    .dev-row button:hover:not(:disabled) { background: var(--c-gold); color: var(--c-void); }
+    .dev-row button:disabled { opacity: 0.4; cursor: not-allowed; }
   `]
 })
 export class ControlsCardComponent {
+  @Input() devMode = false;
   protected store = inject(GameStateStore);
   protected sr = inject(SignalRService);
   protected readonly hasVoted = computed(() => !!this.store.state()?.streamerVote);
   protected busy = signal(false);
   protected errorMsg = '';
+
+  protected async autoVote(leftBiasPercent: number): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.errorMsg = '';
+    try {
+      await this.sr.invoke('DevAutoVote', leftBiasPercent);
+    } catch (e: any) {
+      this.errorMsg = e?.message ?? 'Error al auto-votar';
+    } finally {
+      this.busy.set(false);
+    }
+  }
 
   protected async vote(dir: 'left' | 'right'): Promise<void> {
     if (this.busy()) return;

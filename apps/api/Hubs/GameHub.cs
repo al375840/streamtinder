@@ -13,15 +13,18 @@ public sealed class GameHub : Hub
     private readonly IServiceScopeFactory _scopes;
     private readonly string _streamerChannel;
     private readonly StreamerSessionService _session;
+    private readonly bool _devEnabled;
 
     public GameHub(GameOrchestrator orch, PackRepository packs, IServiceScopeFactory scopes,
-                   IOptions<TwitchOptions> twitchOpts, StreamerSessionService session)
+                   IOptions<TwitchOptions> twitchOpts, StreamerSessionService session,
+                   IWebHostEnvironment env)
     {
         _orch = orch;
         _packs = packs;
         _scopes = scopes;
         _streamerChannel = twitchOpts.Value.Channel;
         _session = session;
+        _devEnabled = env.IsDevelopment();
     }
 
     public override async Task OnConnectedAsync()
@@ -120,7 +123,56 @@ public sealed class GameHub : Hub
         return _orch.VaciarLobbyAsync();
     }
 
+    // ── Dev tools (only available when ASPNETCORE_ENVIRONMENT=Development) ──
+    // The client gates the UI on `?dev=1`, but the server is the source of truth:
+    // even if a malicious client crafts the call, it gets rejected in production.
+
+    public async Task DevAddFakePlayers(int count)
+    {
+        EnsureStreamer();
+        EnsureDevelopment();
+        if (count is < 1 or > 60) throw new HubException("Count must be 1-60");
+
+        using var scope = _scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var rng = Random.Shared;
+        for (var i = 0; i < count; i++)
+        {
+            var nick = $"bot_{rng.Next(0x10000):x4}_{i}";
+            await _orch.HandleViewerCommandAsync(nick, new ChatCommand.Join(), db);
+        }
+    }
+
+    public async Task DevAutoVote(int leftBiasPercent)
+    {
+        EnsureStreamer();
+        EnsureDevelopment();
+        if (leftBiasPercent is < 0 or > 100) throw new HubException("Bias must be 0-100");
+
+        using var scope = _scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var state = _orch.CurrentState;
+        var rng = Random.Shared;
+
+        // Only vote for players who haven't voted on the current card yet.
+        var pending = state.AciertosByNick.Keys
+            .Where(n => !state.CurrentCardVotes.ContainsKey(n))
+            .ToList();
+
+        foreach (var nick in pending)
+        {
+            var dir = rng.Next(100) < leftBiasPercent ? VoteDirection.Left : VoteDirection.Right;
+            await _orch.HandleViewerCommandAsync(nick, new ChatCommand.Vote(dir), db);
+        }
+    }
+
     // ── Guards & validators ──────────────────────────────────────────────────
+
+    private void EnsureDevelopment()
+    {
+        if (!_devEnabled)
+            throw new HubException("Dev tools disabled (only available in Development)");
+    }
 
     private void EnsureStreamer()
     {
