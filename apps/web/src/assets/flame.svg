@@ -1,32 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="outer" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%"   stop-color="#FFC641"/>
-      <stop offset="45%"  stop-color="#FF6B35"/>
-      <stop offset="100%" stop-color="#A8324A"/>
-    </linearGradient>
-    <linearGradient id="inner" x1="50%" y1="20%" x2="50%" y2="100%">
-      <stop offset="0%"   stop-color="#FFF1A8"/>
-      <stop offset="60%"  stop-color="#FFB347"/>
-      <stop offset="100%" stop-color="#FF6B35"/>
-    </linearGradient>
-  </defs>
-  <!-- Outer flame: tall teardrop with a flick at the tip and a curl on the right -->
-  <path d="M32 3
-    Q26 16 24 28
-    Q18 26 16 20
-    Q8  34 12 46
-    Q16 58 32 60
-    Q48 58 52 46
-    Q56 34 48 22
-    Q46 28 40 30
-    Q40 18 32 3 Z"
-    fill="url(#outer)"/>
-  <!-- Inner flame: smaller, brighter, slightly offset -->
-  <path d="M32 24
-    Q26 34 26 44
-    Q26 52 32 54
-    Q38 52 38 44
-    Q38 34 32 24 Z"
-    fill="url(#inner)"/>
+<!-- Streamer Tinder favicon: chunky pixel heart in oxblood→flame palette.
+     Designed at native 16x16 with crisp-edges shape-rendering — every rect
+     is exactly one pixel of the source grid so it stays sharp at the favicon
+     size (16x16) and scales cleanly to larger tab thumbnails. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Black outline (ink #0a0612) -->
+  <path fill="#0a0612" d="
+    M3 2 h3 v1 h-3 z
+    M10 2 h3 v1 h-3 z
+    M2 3 h1 v1 h-1 z
+    M6 3 h4 v1 h-4 z
+    M13 3 h1 v1 h-1 z
+    M1 4 h1 v4 h-1 z
+    M14 4 h1 v4 h-1 z
+    M2 8 h1 v1 h-1 z
+    M13 8 h1 v1 h-1 z
+    M3 9 h1 v1 h-1 z
+    M12 9 h1 v1 h-1 z
+    M4 10 h1 v1 h-1 z
+    M11 10 h1 v1 h-1 z
+    M5 11 h1 v1 h-1 z
+    M10 11 h1 v1 h-1 z
+    M6 12 h1 v1 h-1 z
+    M9 12 h1 v1 h-1 z
+    M7 13 h2 v1 h-2 z" />
+
+  <!-- Pink top (#FF6B35 flame-orange) -->
+  <path fill="#FF6B35" d="
+    M3 3 h3 v1 h-3 z
+    M10 3 h3 v1 h-3 z
+    M2 4 h12 v1 h-12 z" />
+
+  <!-- Magenta mid (#FF3C8B body) -->
+  <path fill="#FF3C8B" d="
+    M2 5 h12 v1 h-12 z
+    M2 6 h12 v1 h-12 z" />
+
+  <!-- Oxblood deep (#A8324A) -->
+  <path fill="#A8324A" d="
+    M3 7 h10 v1 h-10 z
+    M4 8 h8 v1 h-8 z
+    M5 9 h6 v1 h-6 z
+    M6 10 h4 v1 h-4 z
+    M7 11 h2 v1 h-2 z" />
+
+  <!-- Highlights (top lobes glint, cream #FFD580) -->
+  <rect x="4" y="4" width="1" height="1" fill="#FFD580"/>
+  <rect x="11" y="4" width="1" height="1" fill="#FFD580"/>
 </svg>

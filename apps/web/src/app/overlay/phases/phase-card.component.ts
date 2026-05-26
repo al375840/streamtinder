@@ -1,11 +1,13 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, inject, computed, signal, effect } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
+import { RoamersService } from './roamers.service';
 
 @Component({
   selector: 'phase-card',
   standalone: true,
   template: `
     <div class="phase-card">
+      <canvas class="roamers-layer" #roamersCanvas></canvas>
       <div class="swipe-stage">
         <!-- LEFT: NO -->
         <div class="swipe-aff left">
@@ -49,7 +51,14 @@ import { GameStateStore } from '../../core/game-state.store';
     </div>
   `,
   styles: [`
-    .phase-card { width: 100%; height: 100%; }
+    .phase-card { width: 100%; height: 100%; position: relative; }
+    .roamers-layer {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;            /* above the card image, below topbar/bottombar (clipped anyway) */
+      image-rendering: pixelated;
+    }
     .swipe-stage {
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       display: grid; grid-template-columns: 220px 1fr 220px;
@@ -122,10 +131,25 @@ import { GameStateStore } from '../../core/game-state.store';
 })
 export class PhaseCardComponent implements OnInit, OnDestroy {
   protected store = inject(GameStateStore);
+  private roamers = inject(RoamersService);
+  @ViewChild('roamersCanvas', { static: true }) private canvasRef!: ElementRef<HTMLCanvasElement>;
   protected readonly card = this.store.currentCard;
   protected readonly timerDisplay = signal('0:10');
   protected readonly timerUrgent = signal(false);
   private _interval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    // Re-sync roamers whenever lobby players, current votes, or cardIndex changes.
+    // The canvas/rAF loop is independent of this — runs at 60fps regardless.
+    effect(() => {
+      const s = this.store.state();
+      if (!s || s.phase !== 'card') return;
+      const nicks = Object.keys(s.aciertosByNick);
+      const votes: Record<string, 'left' | 'right'> = {};
+      for (const [n, v] of Object.entries(s.currentCardVotes)) votes[n] = v.direction;
+      this.roamers.sync({ nicks, votes, cardIndex: s.cardIndex });
+    });
+  }
 
   protected readonly pips = computed(() => {
     const idx = this.store.state()?.cardIndex ?? 0;
@@ -145,9 +169,14 @@ export class PhaseCardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this._tick();
     this._interval = setInterval(() => this._tick(), 1000);
+    // Stage dims match the overlay's stage-content: 1280 wide, 720 minus
+    // topbar (60) and bottombar (44) = 616 tall. The CSS `width:100%` on the
+    // canvas scales the 1280x616 buffer to whatever size the overlay renders at.
+    this.roamers.start(this.canvasRef.nativeElement, 1280, 616);
   }
   ngOnDestroy(): void {
     if (this._interval) clearInterval(this._interval);
+    this.roamers.stop();
   }
   private _tick(): void {
     const endsAt = this.store.state()?.cardTimerEndsAt;
