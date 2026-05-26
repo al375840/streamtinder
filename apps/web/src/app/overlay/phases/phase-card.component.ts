@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, inject, computed, signal, effect } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
+import { ExtendingTimer, TimerBadge } from '../../core/extending-timer';
 import { RoamersService } from './roamers.service';
 
 @Component({
@@ -36,7 +37,12 @@ import { RoamersService } from './roamers.service';
           @if (card()?.subtitle) {
             <div class="card-subtitle">{{ card()!.subtitle }}</div>
           }
-          <div class="card-timer" [class.urgent]="timerUrgent()">{{ timerDisplay() }}</div>
+          <div class="card-timer" [class.urgent]="timerUrgent()">
+            {{ timerDisplay() }}
+            @for (b of timerBadges(); track b.id) {
+              <span class="extend-badge">+{{ b.secs }}s</span>
+            }
+          </div>
         </div>
 
         <!-- RIGHT: SÍ -->
@@ -127,6 +133,30 @@ import { RoamersService } from './roamers.service';
       border: 3px solid var(--c-warn); padding: 3px 8px; z-index: 5;
     }
     .card-timer.urgent { color: var(--c-danger); border-color: var(--c-danger); animation: pixel-blink 0.4s step-end infinite; }
+    .card-timer { position: absolute; }  /* anchor for the badge */
+    .extend-badge {
+      position: absolute;
+      left: 50%; top: -6px;
+      transform: translateX(-50%) translateY(-100%);
+      font-family: var(--font-title); font-size: 14px;
+      color: var(--c-void); background: var(--c-gold);
+      border: 3px solid var(--c-void);
+      padding: 4px 10px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 3px 3px 0 var(--c-void);
+      animation: extend-pop 1.3s steps(10) forwards;
+      z-index: 20;
+    }
+    @keyframes extend-pop {
+      0%   { transform: translateX(-50%) translateY(0) scale(0);   opacity: 0; }
+      15%  { transform: translateX(-50%) translateY(-40%) scale(1.5); opacity: 1; }
+      30%  { transform: translateX(-50%) translateY(-70%) scale(0.9);  }
+      45%  { transform: translateX(-50%) translateY(-85%) scale(1.1);  }
+      60%  { transform: translateX(-50%) translateY(-100%) scale(1);   }
+      85%  { transform: translateX(-50%) translateY(-100%) scale(1); opacity: 1; }
+      100% { transform: translateX(-50%) translateY(-220%) scale(0.7); opacity: 0; }
+    }
   `]
 })
 export class PhaseCardComponent implements OnInit, OnDestroy {
@@ -136,7 +166,12 @@ export class PhaseCardComponent implements OnInit, OnDestroy {
   protected readonly card = this.store.currentCard;
   protected readonly timerDisplay = signal('0:10');
   protected readonly timerUrgent = signal(false);
+  protected readonly timerBadges = signal<TimerBadge[]>([]);
   private _interval: ReturnType<typeof setInterval> | null = null;
+  // Resets accumulated extension whenever the card changes — each card starts at full 10s.
+  private _timer = new ExtendingTimer({
+    resetKey: () => this.store.state()?.cardIndex,
+  });
 
   constructor() {
     // Re-sync roamers whenever lobby players, current votes, or cardIndex changes.
@@ -172,7 +207,9 @@ export class PhaseCardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this._tick();
-    this._interval = setInterval(() => this._tick(), 1000);
+    // 250ms (not 1s) so the badge pop is near-instant when the counter would hit 0,
+    // and so expired badges leave the DOM promptly after their animation finishes.
+    this._interval = setInterval(() => this._tick(), 250);
     // Stage dims match the overlay's stage-content: 1280 wide, 720 minus
     // topbar (60) and bottombar (44) = 616 tall. The CSS `width:100%` on the
     // canvas scales the 1280x616 buffer to whatever size the overlay renders at.
@@ -183,12 +220,9 @@ export class PhaseCardComponent implements OnInit, OnDestroy {
     this.roamers.stop();
   }
   private _tick(): void {
-    const endsAt = this.store.state()?.cardTimerEndsAt;
-    if (!endsAt) { this.timerDisplay.set('0:10'); this.timerUrgent.set(false); return; }
-    const secs = Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 1000));
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    this.timerDisplay.set(`${m}:${String(s).padStart(2, '0')}`);
-    this.timerUrgent.set(secs <= 3);
+    const r = this._timer.tick(this.store.state()?.cardTimerEndsAt);
+    this.timerDisplay.set(r.display);
+    this.timerUrgent.set(r.urgent);
+    this.timerBadges.set(r.badges);
   }
 }

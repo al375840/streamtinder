@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { GameStateStore } from '../../core/game-state.store';
+import { ExtendingTimer, TimerBadge } from '../../core/extending-timer';
 import { SpriteComponent } from '../../ui/sprite/sprite.component';
 
 @Component({
@@ -21,6 +22,9 @@ import { SpriteComponent } from '../../ui/sprite/sprite.component';
       </div>
       <div class="countdown" [class.ready]="players().length >= 10">
         EMPIEZA EN <span class="num">{{ countdownDisplay() }}</span>
+        @for (b of countdownBadges(); track b.id) {
+          <span class="extend-badge">+{{ b.secs }}s</span>
+        }
       </div>
     </div>
   `,
@@ -58,27 +62,51 @@ import { SpriteComponent } from '../../ui/sprite/sprite.component';
     }
     .countdown .num { font-size: 28px; animation: pixel-blink 1s step-end infinite; }
     .countdown.ready { color: var(--c-success); border-color: var(--c-success); }
+    .extend-badge {
+      position: absolute;
+      left: 50%; top: -6px;
+      transform: translateX(-50%) translateY(-100%);
+      font-family: var(--font-title); font-size: 14px;
+      color: var(--c-void); background: var(--c-gold);
+      border: 3px solid var(--c-void);
+      padding: 4px 10px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 3px 3px 0 var(--c-void);
+      animation: extend-pop 1.3s steps(10) forwards;
+      z-index: 20;
+    }
+    @keyframes extend-pop {
+      0%   { transform: translateX(-50%) translateY(0) scale(0);     opacity: 0; }
+      15%  { transform: translateX(-50%) translateY(-40%) scale(1.5); opacity: 1; }
+      30%  { transform: translateX(-50%) translateY(-70%) scale(0.9); }
+      45%  { transform: translateX(-50%) translateY(-85%) scale(1.1); }
+      60%  { transform: translateX(-50%) translateY(-100%) scale(1);  }
+      85%  { transform: translateX(-50%) translateY(-100%) scale(1); opacity: 1; }
+      100% { transform: translateX(-50%) translateY(-220%) scale(0.7); opacity: 0; }
+    }
   `]
 })
 export class PhaseLobbyComponent implements OnInit, OnDestroy {
   protected store = inject(GameStateStore);
   protected readonly players = this.store.lobbyPlayers;
   protected readonly countdownDisplay = signal('--:--');
+  protected readonly countdownBadges = signal<TimerBadge[]>([]);
   private _interval: ReturnType<typeof setInterval> | null = null;
+  // Lobby has no per-round reset — once the streamer opens the lobby the
+  // single countdown can keep extending until they hit "INICIAR PARTIDA".
+  private _timer = new ExtendingTimer({ extendBy: 5 });
 
   ngOnInit(): void {
     this._tick();
-    this._interval = setInterval(() => this._tick(), 1000);
+    this._interval = setInterval(() => this._tick(), 250);
   }
   ngOnDestroy(): void {
     if (this._interval) clearInterval(this._interval);
   }
   private _tick(): void {
-    const endsAt = this.store.state()?.lobbyCountdownEndsAt;
-    if (!endsAt) { this.countdownDisplay.set('--:--'); return; }
-    const secs = Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 1000));
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    this.countdownDisplay.set(`${m}:${String(s).padStart(2, '0')}`);
+    const r = this._timer.tick(this.store.state()?.lobbyCountdownEndsAt);
+    this.countdownDisplay.set(r.display);
+    this.countdownBadges.set(r.badges);
   }
 }
