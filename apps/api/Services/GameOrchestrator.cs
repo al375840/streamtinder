@@ -210,6 +210,11 @@ public sealed class GameOrchestrator
 
         foreach (var (nick, aciertos) in _state.AciertosByNick)
         {
+            // Synthetic dev bots never touch the persistent stores: not the
+            // per-game participant list, not the global Scores table. This
+            // keeps real leaderboards clean even when dev mode is used in prod.
+            if (BotNicks.IsBot(nick)) continue;
+
             var survived = winners.Any(w => w.Nick == nick);
             var bonus = winners.FirstOrDefault(w => w.Nick == nick)?.Bonus ?? 0;
             game.Participants.Add(new PersistedGameParticipant

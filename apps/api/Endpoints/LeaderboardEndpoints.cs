@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using StreamerTinder.Api.Domain;
 using StreamerTinder.Api.Infrastructure;
 
 namespace StreamerTinder.Api.Endpoints;
@@ -14,7 +15,12 @@ public static class LeaderboardEndpoints
             offset = Math.Max(0, offset);
             limit = Math.Clamp(limit, 1, 200);
 
-            var query = db.Scores.OrderByDescending(s => s.TotalPoints);
+            // Defensive: exclude any legacy bot rows (older test data from before
+            // the persistence-side filter landed). Real persistence already skips
+            // bots, so this is mostly a safety net.
+            var query = db.Scores
+                .Where(s => !s.TwitchUsername.StartsWith(BotNicks.Prefix))
+                .OrderByDescending(s => s.TotalPoints);
             var total = await query.CountAsync();
             var rows = await query
                 .Skip(offset)

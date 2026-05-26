@@ -44,7 +44,7 @@ import { ControlsVictoryComponent } from './controls/controls-victory.component'
         }
 
         @if (devMode()) {
-          <div class="dev-banner">⚙ DEV MODE — botones extra activos (solo entorno Development)</div>
+          <div class="dev-banner">⚙ MODO TEST — bots y auto-voto activos (los bots no cuentan en el leaderboard)</div>
         }
 
         @switch (store.phase()) {
