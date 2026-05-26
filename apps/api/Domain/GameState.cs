@@ -18,6 +18,10 @@ public sealed record GameState(
     public const int LobbySeconds = 60;
     public const int BonusPool = 100;
     public const int PointsPerHit = 10;
+    /// <summary>How many cards to play per game. Packs bigger than this are
+    /// sub-sampled at random in <see cref="Services.GameOrchestrator.OpenLobbyAsync"/>
+    /// so replaying the same pack feels different each time.</summary>
+    public const int CardsPerGame = 10;
 
     public static GameState New() => new(
         Phase: GamePhase.Idle,
@@ -35,12 +39,21 @@ public sealed record GameState(
     {
         if (Phase != GamePhase.Idle && Phase != GamePhase.Victory)
             throw new InvalidOperationException($"Cannot open lobby from {Phase}");
+        // Reset all transient game state — otherwise the leftover AciertosByNick,
+        // CurrentCardVotes, EliminatedTiers, etc. from the previous game leak into
+        // the new lobby and cause weird UI states (stale votes, bots still counted).
         return this with
         {
             Phase = GamePhase.Lobby,
             Pack = pack,
             LobbyPlayers = Array.Empty<LobbyPlayer>(),
-            LobbyCountdownEndsAt = now.AddSeconds(LobbySeconds)
+            LobbyCountdownEndsAt = now.AddSeconds(LobbySeconds),
+            CardIndex = 0,
+            CardTimerEndsAt = null,
+            StreamerVote = null,
+            CurrentCardVotes = new Dictionary<string, PlayerVote>(),
+            AciertosByNick = new Dictionary<string, int>(),
+            EliminatedTiers = Array.Empty<int>(),
         };
     }
 

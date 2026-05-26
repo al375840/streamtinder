@@ -32,7 +32,17 @@ public sealed class GameOrchestrator
             _streamerUsername = streamer;
             _bansCache = (await db.Bans.Select(b => b.TwitchUsername).ToListAsync(ct)).ToHashSet();
             var previous = _state;
-            _state = _state.OpenLobby(pack, DateTime.UtcNow);
+
+            // Subsample to CardsPerGame at random so replays of the same pack feel
+            // fresh each time. Packs smaller than CardsPerGame are used in full
+            // (still shuffled — order shouldn't be deterministic either).
+            var shuffled = pack.Cards
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(Math.Min(GameState.CardsPerGame, pack.Cards.Count))
+                .ToList();
+            var playPack = pack with { Cards = shuffled };
+
+            _state = _state.OpenLobby(playPack, DateTime.UtcNow);
             _currentGameId = Guid.NewGuid();
             try
             {

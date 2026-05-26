@@ -153,7 +153,11 @@ export class PhaseCardComponent implements OnInit, OnDestroy {
 
   protected readonly pips = computed(() => {
     const idx = this.store.state()?.cardIndex ?? 0;
-    return Array.from({ length: 10 }, (_, i) =>
+    // Track the actual pack size — the backend subsamples to CardsPerGame
+    // (currently 10), but smaller packs (e.g. eeveelutions has 9) are played
+    // in full. Hardcoding 10 left a perpetually-empty pip on those.
+    const total = this.store.state()?.pack?.cards.length ?? 10;
+    return Array.from({ length: total }, (_, i) =>
       i < idx ? 'done' : i === idx ? 'current' : 'empty'
     );
   });

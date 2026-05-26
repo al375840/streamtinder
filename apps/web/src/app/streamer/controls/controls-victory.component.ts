@@ -100,8 +100,10 @@ export class ControlsVictoryComponent implements OnChanges {
     this.busy.set(true);
     this.errorMsg = '';
     try {
-      const nick = this.store.streamerNick();
-      await this.sr.invoke('OpenLobby', packId, nick);
+      // Hub signature is OpenLobby(packId) — streamer nick is read server-side
+      // from Twitch:Channel config. The extra `nick` arg was leftover from a
+      // previous API shape and caused "an error on the server" when invoked.
+      await this.sr.invoke('OpenLobby', packId);
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al abrir nueva partida';
     } finally {
@@ -114,8 +116,7 @@ export class ControlsVictoryComponent implements OnChanges {
     this.busy.set(true);
     this.errorMsg = '';
     try {
-      const nick = this.store.streamerNick();
-      await this.sr.invoke('OpenLobby', this.selectedPackId, nick);
+      await this.sr.invoke('OpenLobby', this.selectedPackId);
     } catch (e: any) {
       this.errorMsg = e?.message ?? 'Error al abrir nueva partida';
     } finally {
