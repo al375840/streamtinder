@@ -23,8 +23,24 @@ const SPRITE_W = 24;
 const SPRITE_H = 30;
 const DRAW_W = 48;   // sprites render at 2x in the overlay
 const DRAW_H = 60;
-const NICK_PAD = 14; // space below sprite for the nick label
 const MIN_Y = 12;
+
+/** Total vertical footprint of the nick pill (background + text + padding + border).
+ *  Used to compute how far down a roamer can go before its label overlaps things. */
+const NICK_PILL_H = 16;
+
+/** Maximum number of avatars rendered on screen simultaneously.
+ *  When the lobby has more than this, a random subset is shown. The remainder
+ *  still vote and count in the tally — they're just not visualised. */
+const MAX_VISIBLE = 20;
+
+// ── Card footer exclusion ──────────────────────────────────────────────────
+// The card sits centered on the 1280x616 stage at width 420, max-height 540.
+// Its bottom 80-100px hold the card-name + card-subtitle text. We forbid the
+// roamers from landing where their nick label would overlap that text.
+const CARD_X_MIN = 410;   // a bit wider than the card's actual 430 to give breathing room
+const CARD_X_MAX = 870;
+const CARD_FOOTER_TOP_Y = 478;
 
 // Zones: 35% / 30% / 35% of the 1280 stage width.
 const ZONES: Record<VoteKind, { minX: number; maxX: number }> = {
@@ -72,7 +88,7 @@ export class RoamersService {
 
   /**
    * Reconcile the roamer set with the current game state.
-   * - Adds spawns for new lobby players
+   * - Adds spawns for new lobby players (up to MAX_VISIBLE total)
    * - Removes roamers whose nicks left the lobby
    * - Triggers migration when a vote arrives (first-vote-wins, ignores subsequent)
    * - Resets all votes to 'undecided' when the cardIndex changes
@@ -95,12 +111,24 @@ export class RoamersService {
       if (!incoming.has(k)) this.roamers.delete(k);
     }
 
-    // 3. Spawn new players.
-    for (const nick of opts.nicks) {
-      if (!this.roamers.has(nick)) this.roamers.set(nick, this.spawn(nick));
+    // 3. Fill open slots up to MAX_VISIBLE with a random sample of the lobby.
+    //    Once chosen, a roamer sticks around until they leave the lobby — we don't
+    //    re-shuffle on every state update (that would cause chaotic respawning).
+    const slotsLeft = MAX_VISIBLE - this.roamers.size;
+    if (slotsLeft > 0) {
+      const candidates = opts.nicks.filter(n => !this.roamers.has(n));
+      // Partial Fisher-Yates: only need to shuffle the first `slotsLeft` items.
+      const take = Math.min(slotsLeft, candidates.length);
+      for (let i = 0; i < take; i++) {
+        const j = i + Math.floor(Math.random() * (candidates.length - i));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        this.roamers.set(candidates[i], this.spawn(candidates[i]));
+      }
     }
 
     // 4. Apply votes (only the first one per player counts, per game rules).
+    //    Note: votes from non-shown nicks are silently ignored here — their tally
+    //    is shown by the big NO/SÍ counters, this layer is just a visual sample.
     for (const [nick, direction] of Object.entries(opts.votes)) {
       const r = this.roamers.get(nick);
       if (!r || r.vote !== 'undecided') continue;
@@ -111,6 +139,18 @@ export class RoamersService {
 
   // ── internals ─────────────────────────────────────────────────────────────
 
+  /** Maximum Y for a roamer's top-left, given its X. Inside the card's
+   *  horizontal range the limit is higher up (so the nick label stays clear
+   *  of the card-name/subtitle text); outside, it can go almost to the floor. */
+  private maxYAt(x: number): number {
+    const right = x + DRAW_W;
+    const overCardFooter = right >= CARD_X_MIN && x <= CARD_X_MAX;
+    if (overCardFooter) {
+      return CARD_FOOTER_TOP_Y - DRAW_H - NICK_PILL_H - 4;
+    }
+    return this.stageH - DRAW_H - NICK_PILL_H - 8;
+  }
+
   private spawn(nick: string): RoamerState {
     const sprite = document.createElement('canvas');
     sprite.width = SPRITE_W;
@@ -119,11 +159,12 @@ export class RoamersService {
     renderSprite(sctx, spriteFor(nick));
 
     const z = ZONES.undecided;
+    const x = z.minX + Math.random() * (z.maxX - z.minX - DRAW_W);
     return {
       nick,
       vote: 'undecided',
-      x: z.minX + Math.random() * (z.maxX - z.minX - DRAW_W),
-      y: MIN_Y + Math.random() * (this.stageH - DRAW_H - NICK_PAD - MIN_Y),
+      x,
+      y: MIN_Y + Math.random() * (this.maxYAt(x) - MIN_Y),
       nextHopAt: performance.now() + Math.random() * 300,
       sprite,
     };
@@ -153,39 +194,53 @@ export class RoamersService {
       const targetCenter = (z.minX + z.maxX) / 2;
       r.x += Math.sign(targetCenter - r.x) * 6;
       r.y += randInt(-2, 2);
-      r.y = clamp(r.y, MIN_Y, this.stageH - DRAW_H - NICK_PAD);
       r.nextHopAt = now + 80;
     } else {
       // Inside zone: erratic jitter, slower cadence.
       r.x = clamp(r.x + randInt(-4, 4), z.minX, z.maxX - DRAW_W);
-      r.y = clamp(r.y + randInt(-3, 3), MIN_Y, this.stageH - DRAW_H - NICK_PAD);
+      r.y += randInt(-3, 3);
       r.nextHopAt = now + 150 + Math.random() * 200;
     }
+    // Always clamp Y to the *current* X's allowed range. This is what pulls
+    // roamers back up when they migrate into the card's horizontal range —
+    // the maxY drops, the clamp pushes them out of the footer area.
+    r.y = clamp(r.y, MIN_Y, this.maxYAt(r.x));
   }
 
   private draw(ctx: CanvasRenderingContext2D, r: RoamerState): void {
-    // Sprite, scaled 2x with nearest-neighbor (canvas-wide setting in start()).
+    // Sprite, scaled 2x with nearest-neighbor (set canvas-wide in start()).
     ctx.drawImage(r.sprite, r.x, r.y, DRAW_W, DRAW_H);
 
-    // Nick label, outlined for legibility over any background.
-    const cx = r.x + DRAW_W / 2;
-    const ny = r.y + DRAW_H + 10;
-    const txt = '@' + (r.nick.length > 12 ? r.nick.slice(0, 12) : r.nick);
-    ctx.font = '7px "Press Start 2P", monospace';
+    // Nick label — drawn as a tight dark pill with light text. Way more readable
+    // than the previous text-shadow outline approach, which got drowned out
+    // against busy card art.
+    const nickText = '@' + (r.nick.length > 12 ? r.nick.slice(0, 12) : r.nick);
+    ctx.font = '8px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#0a0612';
-    // 8-direction outline (cheap, looks crispy)
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        if (dx === 0 && dy === 0) continue;
-        ctx.fillText(txt, cx + dx, ny + dy);
-      }
-    }
-    ctx.fillStyle = '#f6f0ff';
-    ctx.fillText(txt, cx, ny);
+    ctx.textBaseline = 'middle';
 
-    // Vote tag — small badge over the top-right of the sprite.
+    const textW = Math.ceil(ctx.measureText(nickText).width);
+    const pillW = textW + 8;
+    const pillH = NICK_PILL_H;
+    const cx = r.x + DRAW_W / 2;
+    const pillX = Math.round(cx - pillW / 2);
+    const pillY = Math.round(r.y + DRAW_H + 2);
+
+    // Background (void)
+    ctx.fillStyle = '#0a0612';
+    ctx.fillRect(pillX, pillY, pillW, pillH);
+    // 1px outline in stone — gives the pill definition without competing
+    // with the bright text inside.
+    ctx.fillStyle = '#3a2a5a';
+    ctx.fillRect(pillX - 1, pillY, 1, pillH);
+    ctx.fillRect(pillX + pillW, pillY, 1, pillH);
+    ctx.fillRect(pillX, pillY - 1, pillW, 1);
+    ctx.fillRect(pillX, pillY + pillH, pillW, 1);
+    // Text
+    ctx.fillStyle = '#f6f0ff';
+    ctx.fillText(nickText, cx, pillY + pillH / 2 + 1);
+
+    // Vote tag — small badge at the top-right of the sprite.
     if (r.vote !== 'undecided') {
       const color = r.vote === 'no' ? '#ff5b5b' : '#5fde6f';
       const label = r.vote === 'no' ? '!izq' : '!der';
@@ -200,6 +255,7 @@ export class RoamersService {
       ctx.strokeRect(tagX, tagY, tagW, tagH);
       ctx.fillStyle = color;
       ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textBaseline = 'alphabetic';
       ctx.fillText(label, tagX + tagW / 2, tagY + tagH - 3);
     }
   }
